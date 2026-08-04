@@ -1,0 +1,48 @@
+name: Build WASM and Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+
+      - name: Compile C++ to WebAssembly
+        run: emcc -O3 --bind -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 algorithms.cpp -o algorithms_wasm.js
+
+      - name: Assemble site directory
+        run: |
+          mkdir -p _site
+          cp index.html style.css main.js algorithms.py algorithms_wasm.js algorithms_wasm.wasm _site/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

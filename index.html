@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoScope: Interactive Algorithmic Workspace</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- PyScript CDN Core -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+</head>
+<body>
+    <div class="app-shell">
+        <!-- Mobile-only top bar with menu toggle -->
+        <div class="mobile-topbar">
+            <button id="hamburger-btn" class="hamburger-btn" aria-label="Open navigation menu">☰</button>
+            <div class="brand-section" style="margin-bottom: 0;">
+                <div class="logo-dot"></div>
+                <span class="brand-title">AlgoScope</span>
+            </div>
+        </div>
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand-section">
+                <div class="logo-dot"></div>
+                <span class="brand-title">AlgoScope</span>
+            </div>
+            
+            <nav style="margin-bottom: 2rem;">
+                <ul class="nav-list">
+                    <li>
+                        <button id="nav-knapsack" class="nav-item-btn active">
+                            <!-- SVG Grid Icon -->
+                            <svg viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>
+                            <span>0/1 Knapsack DP</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button id="nav-lcs" class="nav-item-btn">
+                            <!-- SVG Alignment Icon -->
+                            <svg viewBox="0 0 24 24"><path d="M4 15h16v2H4v-2zm0-4h16v2H4v-2zm0-4h16v2H4V7zm0 12h16v2H4v-2z"/></svg>
+                            <span>LCS Alignment DP</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button id="nav-quicksort" class="nav-item-btn">
+                            <!-- SVG Columns Icon -->
+                            <svg viewBox="0 0 24 24"><path d="M4 12h3v8H4v-8zm5-6h3v14H9V6zm5 10h3v4h-3v-4zm5-7h3v11h-3V9z"/></svg>
+                            <span>Quick Sort (Lomuto)</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button id="nav-mergesort" class="nav-item-btn">
+                            <!-- SVG Split Icon -->
+                            <svg viewBox="0 0 24 24"><path d="M4 4h6v4H4V4zm10 0h6v4h-6V4zM4 16h6v4H4v-4zm10 0h6v4h-6v-4zM12 8v8h2V8h-2z"/></svg>
+                            <span>Merge Sort (In-Place)</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="engine-toggle" id="engine-toggle">
+                    <span class="engine-toggle-label">Compute engine</span>
+                    <div class="engine-toggle-buttons">
+                        <button id="engine-btn-python" class="engine-btn active" data-engine="python">Python</button>
+                        <button id="engine-btn-wasm" class="engine-btn" data-engine="wasm" disabled title="WASM module not built. Run compile_wasm.sh (or .bat), see README.">WASM</button>
+                    </div>
+                    <span class="engine-perf" id="engine-perf"></span>
+                </div>
+                <div id="loading-badge" class="loading-badge">
+                    <div class="spinner"></div>
+                    <span>Initializing Engine...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard Content -->
+        <main class="main-content">
+            <!-- Left Workspace Column -->
+            <div class="left-workspace-column">
+                
+                <!-- Visual Canvas Card -->
+                <div class="card canvas-card">
+                    
+                    <!-- 1. Knapsack View -->
+                    <div id="view-knapsack" class="viz-view active">
+                        <div class="dp-stats-bar">
+                            <div>Capacity Limit: <b id="ks-stat-capacity" style="color: var(--accent-cyan);">0</b></div>
+                            <div>Weight Utilized: <b id="ks-stat-weight" style="color: var(--accent-pink);">0</b></div>
+                            <div>Maximized Value: <b id="ks-stat-value" style="color: var(--accent-green);">$0</b></div>
+                        </div>
+                        <div class="item-preview-list" id="ks-chips-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                        <div class="dp-table-scroll">
+                            <table id="ks-table" class="grid-matrix">
+                                <!-- Table rows -->
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 2. LCS View -->
+                    <div id="view-lcs" class="viz-view">
+                        <div class="dp-stats-bar">
+                            <div>String 1: <b id="lcs-stat-s1" style="color: var(--accent-cyan); font-family: monospace;">-</b></div>
+                            <div>String 2: <b id="lcs-stat-s2" style="color: var(--accent-pink); font-family: monospace;">-</b></div>
+                            <div>LCS Length: <b id="lcs-stat-len" style="color: var(--accent-green);">0</b></div>
+                        </div>
+                        <div class="sequence-ribbon">
+                            <span class="seq-label">Reconstructed Subsequence:</span>
+                            <span id="lcs-ribbon-text" class="seq-string">-</span>
+                        </div>
+                        <div class="dp-table-scroll">
+                            <table id="lcs-table" class="grid-matrix">
+                                <!-- Table rows -->
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 3. Quick Sort View -->
+                    <div id="view-quicksort" class="viz-view">
+                        <div class="sorting-container">
+                            <div class="chart-section">
+                                <div class="chart-title">Unsorted / Sorted Array Columns</div>
+                                <div class="bar-chart" id="qs-chart">
+                                    <!-- Bar columns -->
+                                </div>
+                            </div>
+                            <div class="stack-inspector">
+                                <div class="stack-label">Active Recursion Partitions Stack</div>
+                                <div class="stack-grid" id="qs-stack">
+                                    <span class="stack-none">Stack Empty</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Merge Sort View -->
+                    <div id="view-mergesort" class="viz-view">
+                        <div class="sorting-container">
+                            <div class="chart-section">
+                                <div class="chart-title">Main Array Values</div>
+                                <div class="bar-chart" id="ms-chart-main">
+                                    <!-- Bar columns -->
+                                </div>
+                            </div>
+                            <div class="chart-section">
+                                <div class="chart-title">Helper Array (Temporary Merge Buffer)</div>
+                                <div class="bar-chart" id="ms-chart-helper" style="height: 120px;">
+                                    <!-- Bar columns -->
+                                </div>
+                            </div>
+                            <div class="stack-inspector">
+                                <div class="stack-label">Active Split Segments Stack</div>
+                                <div class="stack-grid" id="ms-stack">
+                                    <span class="stack-none">Stack Empty</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Parameters Config Card -->
+                <div class="card config-card">
+                    <!-- Knapsack Config -->
+                    <div id="config-knapsack" class="config-tab-view active">
+                        <div class="config-header">0/1 Knapsack Optimization Input</div>
+                        <div class="config-error" id="config-error-knapsack"></div>
+                        <div class="config-grid">
+                            <div class="form-group">
+                                <label for="input-ks-weights">Item Weights (comma separated)</label>
+                                <input type="text" id="input-ks-weights" value="2, 3, 4, 5">
+                            </div>
+                            <div class="form-group">
+                                <label for="input-ks-values">Item Values (comma separated)</label>
+                                <input type="text" id="input-ks-values" value="3, 4, 5, 8">
+                            </div>
+                            <div class="form-group" style="max-width: 140px;">
+                                <label for="input-ks-capacity">Capacity Limit</label>
+                                <input type="number" id="input-ks-capacity" value="8" min="1" max="50">
+                            </div>
+                            <button id="btn-ks-init" class="btn btn-primary">Initialize visualizer</button>
+                        </div>
+                    </div>
+
+                    <!-- LCS Config -->
+                    <div id="config-lcs" class="config-tab-view">
+                        <div class="config-header">Longest Common Subsequence Input</div>
+                        <div class="config-error" id="config-error-lcs"></div>
+                        <div class="config-grid">
+                            <div class="form-group">
+                                <label for="input-lcs-s1">String 1 (Columns)</label>
+                                <input type="text" id="input-lcs-s1" value="BDCABA">
+                            </div>
+                            <div class="form-group">
+                                <label for="input-lcs-s2">String 2 (Rows)</label>
+                                <input type="text" id="input-lcs-s2" value="ABCBDAB">
+                            </div>
+                            <button id="btn-lcs-init" class="btn btn-primary">Initialize visualizer</button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Sort Config -->
+                    <div id="config-quicksort" class="config-tab-view">
+                        <div class="config-header">Quick Sort (Lomuto) Input</div>
+                        <div class="config-error" id="config-error-quicksort"></div>
+                        <div class="config-grid">
+                            <div class="form-group" style="flex: 2;">
+                                <label for="input-qs-arr">Custom Array (comma separated)</label>
+                                <input type="text" id="input-qs-arr" value="24, 9, 32, 15, 8, 41, 18, 5">
+                            </div>
+                            <div class="form-group" style="max-width: 120px;">
+                                <label for="input-qs-size">Array Size</label>
+                                <input type="number" id="input-qs-size" value="10" min="4" max="20">
+                            </div>
+                            <button id="btn-qs-random" class="btn btn-secondary">Randomize</button>
+                            <button id="btn-qs-init" class="btn btn-primary">Initialize visualizer</button>
+                        </div>
+                    </div>
+
+                    <!-- Merge Sort Config -->
+                    <div id="config-mergesort" class="config-tab-view">
+                        <div class="config-header">Merge Sort (In-Place) Input</div>
+                        <div class="config-error" id="config-error-mergesort"></div>
+                        <div class="config-grid">
+                            <div class="form-group" style="flex: 2;">
+                                <label for="input-ms-arr">Custom Array (comma separated)</label>
+                                <input type="text" id="input-ms-arr" value="32, 12, 45, 8, 19, 28, 5, 41">
+                            </div>
+                            <div class="form-group" style="max-width: 120px;">
+                                <label for="input-ms-size">Array Size</label>
+                                <input type="number" id="input-ms-size" value="10" min="4" max="20">
+                            </div>
+                            <button id="btn-ms-random" class="btn btn-secondary">Randomize</button>
+                            <button id="btn-ms-init" class="btn btn-primary">Initialize visualizer</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player Deck Controls Card -->
+                <div class="card control-deck">
+                    <span id="label-step-tracker" class="step-tracker">Step 0 / 0</span>
+                    
+                    <div class="player-controls-group">
+                        <button id="player-btn-reset" class="btn btn-secondary player-btn" title="Reset View">↺</button>
+                        <button id="player-btn-prev" class="btn btn-secondary player-btn" title="Step Back">⏮</button>
+                        <button id="player-btn-play" class="btn btn-primary player-btn" title="Play Simulation">▶</button>
+                        <button id="player-btn-next" class="btn btn-secondary player-btn" title="Step Forward">⏭</button>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <span>Simulation Speed</span>
+                        <input type="range" id="slider-speed" min="50" max="1500" value="800" step="50">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Instructor Column -->
+            <div class="right-instructor-column">
+                
+                <!-- Instructor Guide card -->
+                <div class="card instructor-card">
+                    <div class="instructor-header">
+                        <div class="instructor-badge">AI CS Instructor</div>
+                        <div class="dots-group">
+                            <div class="dot red"></div>
+                            <div class="dot yellow"></div>
+                            <div class="dot green"></div>
+                        </div>
+                    </div>
+                    <div class="instructor-console" id="instructor-terminal">
+                        Select parameters and click "Initialize Visualizer" to begin tracing execution steps.
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Python Script Hook -->
+    <script type="py" src="algorithms.py"></script>
+
+    <!-- Optional WebAssembly engine. algorithms_wasm.js/.wasm only exist if
+         compile_wasm.sh/.bat has been run locally, or the deploy workflow
+         built them. If the file 404s, the WASM toggle in the sidebar simply
+         stays disabled and the app runs Python-only — see README. -->
+    <script>
+        var Module = {
+            onRuntimeInitialized: function() {
+                if (window.onWasmLoaded) window.onWasmLoaded();
+            }
+        };
+    </script>
+    <script src="algorithms_wasm.js" onerror="window.onWasmUnavailable && window.onWasmUnavailable();"></script>
+
+    <!-- JS orchestrator loader -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>
