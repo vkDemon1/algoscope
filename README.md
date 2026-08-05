@@ -9,154 +9,163 @@
 
 ---
 
-## What it does
+## Overview
 
-AlgoScope lets you pause, step through, and rewind four algorithms one decision at a time. An **AI Instructor** panel explains each step in plain language as it happens.
-
-| Visualizer | What you see |
-|---|---|
-| **0/1 Knapsack DP** | DP table filling cell-by-cell, include/exclude decisions, backtrack path to optimal items |
-| **LCS Alignment DP** | Character match/mismatch decisions, diagonal transitions, reconstructed common subsequence |
-| **Quick Sort (Lomuto)** | Pivot selection, scanning pointers, swap highlights, active partition boundaries, call stack |
-| **Merge Sort** | Main array alongside a live temporary merge buffer, split/merge phases, call stack |
+**AlgoScope** is a high-performance algorithm visualizer designed to turn complex algorithm executions into intuitive, step-by-step interactive animations. It allows developers and students to pause, step through, and rewind algorithm logic one decision at a time while an **AI Instructor** panel explains every state change in natural language.
 
 ---
 
-## Architecture — polymorphic dual backend
+## Features & Visualizers
 
-The same step schema is emitted by two completely independent engines. Swapping between them is a one-click toggle in the sidebar; the rendering code never changes.
+| Visualizer | Interactive Highlights | Key Outputs & State Tracking |
+|---|---|---|
+| **0/1 Knapsack DP** | DP table filling cell-by-cell, option evaluation (include vs. exclude), active cell comparisons | Backtrack path tracing optimal item subset, capacity utilization, maximized total value |
+| **LCS Alignment DP** | Character match/mismatch decision logic, cell comparison pointers, diagonal/up/left transitions | Reconstructed Longest Common Subsequence, DP grid alignment matrix |
+| **Quick Sort (Lomuto)** | Pivot selection, dual scanning pointers (`i` and `j`), active partition range bounds, swap highlights | In-place element movement, recursion call stack visualizer |
+| **Merge Sort** | Split & merge phases, main array highlights, live temporary merge buffer | Divided sub-array bounds, merge buffer step-by-step insertion, call stack |
 
-```
-Browser UI (HTML/CSS/JS)
-        │
-        ▼
-┌───────────────────────┐      ┌─────────────────────────────┐
-│  Python Engine        │  OR  │  C++ / WebAssembly Engine   │
-│  (PyScript / Pyodide) │      │  (Emscripten, O3 optimized) │
-│  algorithms.py        │      │  algorithms.cpp → .wasm      │
-└───────────────────────┘      └─────────────────────────────┘
-        │                               │
-        └───────────────┬───────────────┘
-                        ▼
-            Identical JSON step schema
-            { stage, matrix/array, currentRow,
-              currentCol, description, ... }
-```
-
-This design demonstrates a real software engineering pattern: the same interface contract respected by two backends in different languages, with zero UI coupling.
+### Interactive Control Suite
+- **Playback Controls**: Step Next, Step Previous, Auto-Play/Pause, and Instant Reset.
+- **Speed Slider**: Adjustable playback speed (100 ms to 2000 ms per step).
+- **Dual Compute Engine Toggle**: Instant switching between Python (PyScript) and C++ (WebAssembly).
+- **Performance Meter**: Real-time timing metrics displaying step generation count and engine execution time in milliseconds.
+- **Cyberpunk Dark UI**: Glassmorphic styling with high-contrast accent colors and fully responsive mobile drawer navigation.
 
 ---
 
-## Running locally
+## Architecture — Polymorphic Dual Backend
+
+AlgoScope uses a decoupled frontend/backend architecture where two completely independent computation engines respect the **same step JSON schema contract**. Switching engines requires zero changes to the rendering pipeline or UI logic.
+
+```
+                  Browser UI (HTML5 / Vanilla CSS / JS main.js)
+                                      │
+                                      ▼
+             ┌─────────────────────────────────────────────────┐
+             │       Polymorphic Dispatcher (main.js)           │
+             └────────────────────────┬────────────────────────┘
+                                      │
+             ┌────────────────────────┴────────────────────────┐
+             ▼                                                 ▼
+┌─────────────────────────┐                       ┌─────────────────────────┐
+│     Python Engine       │                       │   C++ / WASM Engine     │
+│   (PyScript / Pyodide)  │                       │ (Emscripten, O3 Opt)    │
+│     algorithms.py       │                       │   algorithms.cpp        │
+└────────────┬────────────┘                       └────────────┬────────────┘
+             │                                                 │
+             └────────────────────────┬────────────────────────┘
+                                      ▼
+                        Identical JSON Step Schema
+     { stage, matrix/array, currentRow, currentCol, description, ... }
+```
+
+### Key Engineering Highlights
+- **Parameter Caching Pattern**: Rendering functions read from a frozen snapshot taken at initialization time (`state.ks`, `state.lcs`), guaranteeing that mid-animation edits to input fields never desynchronize the UI highlights or math.
+- **Inline Validation**: Initializers validate parameter counts, array formats, and numeric boundaries, displaying user-friendly inline messages instead of intrusive browser alerts.
+- **Zero-Dependency Native Testability**: `algorithms.cpp` compiles under both `#ifdef __EMSCRIPTEN__` (for browser WASM export) and standard native C++ (for instant native unit testing).
+
+---
+
+## Running Locally
+
+Since PyScript and WebAssembly fetch modules dynamically, AlgoScope requires a local HTTP server (file:// protocol is blocked by browser CORS policy).
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/vkDemon1/algoscope.git
 cd algoscope
 
-# PyScript requires a real HTTP server (CORS blocks file:// URLs)
+# 2. Start a local HTTP server
 python -m http.server 8000
 ```
 
-Open **[http://localhost:8000](http://localhost:8000)**. The sidebar badge transitions to **"Engine Ready"** once Pyodide finishes loading (~3–5 s on first visit).
+Open **[http://localhost:8000](http://localhost:8000)** in your browser. The sidebar badge will transition to **"Engine Ready"** once Pyodide finishes initializing (~3–5 seconds on first visit).
 
 ---
 
-## Enabling the WebAssembly backend
+## Enabling the WebAssembly Backend
 
-The live GitHub Pages demo already has the WASM module compiled in by CI. To build it locally:
+The live GitHub Pages demo includes pre-compiled WASM binaries built via CI. To build the WebAssembly module locally:
 
-### Prerequisites
-
-Install the [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html):
+### 1. Install Emscripten SDK
 
 ```bash
 git clone https://github.com/emscripten-core/emsdk.git
 cd emsdk
 ./emsdk install latest
 ./emsdk activate latest
-source ./emsdk_env.sh   # adds emcc to PATH
+source ./emsdk_env.sh   # Adds emcc to PATH
 ```
 
-### Compile
+### 2. Compile C++ to WASM
 
 ```bash
 # macOS / Linux
 ./compile_wasm.sh
 
-# Windows
+# Windows (PowerShell / Command Prompt)
 compile_wasm.bat
 ```
 
-This creates `algorithms_wasm.js` and `algorithms_wasm.wasm` next to `index.html`. Restart your HTTP server and the WASM toggle in the sidebar becomes clickable. Switching engines is instant — the same JSON schema flows into the same renderer.
+This generates `algorithms_wasm.js` and `algorithms_wasm.wasm` in the root directory. Refresh your local server page, and the **WASM** toggle button in the sidebar will activate automatically.
 
 ---
 
-## Running the test suite
+## Running the Automated Test Suite
 
-Both language implementations are covered by automated tests that CI runs on every push and pull request — no Emscripten SDK required.
+AlgoScope includes unit tests covering all four algorithms across both Python and C++ implementations.
 
-### Python tests
+### Python Tests (Pytest)
 
 ```bash
 pip install pytest
 pytest tests/test_algorithms.py -v
 ```
+*(Runs 18 unit tests checking textbook cases, edge cases, single elements, duplicates, and step schema structure).*
 
-### C++ tests (native, no Emscripten needed)
+### C++ Tests (Native - No Emscripten SDK Required)
 
 ```bash
+# Compile and run native test runner
 g++ -std=c++17 -O2 -Wall -o tests/test_algorithms tests/test_algorithms.cpp
 ./tests/test_algorithms
 ```
-
-`algorithms.cpp` compiles under two modes via an `#ifdef __EMSCRIPTEN__` guard:
-- **With `emcc`** — emits the WASM module with full JS bindings.
-- **With plain `g++/clang++`** — compiles pure logic with no Emscripten types, directly linkable by the native test binary.
+*(Executes 17 native assertion checks covering algorithm outputs, sorted state invariants, and step generation).*
 
 ---
 
-## Project structure
+## Input Constraints
+
+| Parameter | Recommended Limit | Technical Reason |
+|---|---|---|
+| **Knapsack Items** | ≤ 12 items | Prevents matrix vertical overcrowding on standard displays |
+| **Knapsack Capacity** | ≤ 50 units | Table dimension `(N+1) × (W+1)` fits cleanly without excessive scrolling |
+| **LCS String Length** | ≤ 15 characters | Ensures cell contents remain crisp on smaller viewports |
+| **Sorting Array Length** | ≤ 25 elements | Keeps bar charts readable with clear index labels |
+
+---
+
+## Project Structure
 
 ```
 algoscope/
-├── index.html              # Dashboard layout (sidebar, canvas, instructor panel)
-├── style.css               # Cyberpunk design tokens, animations, responsive layout
-├── main.js                 # Orchestrator: validation, engine dispatch, DOM rendering
-├── algorithms.py           # Python visualizer engine + Pyodide FFI bindings
-├── algorithms.cpp          # C++ visualizer engine + Emscripten WASM bindings
-├── compile_wasm.sh         # WASM build script (macOS / Linux)
-├── compile_wasm.bat        # WASM build script (Windows)
+├── index.html              # Main application shell (sidebar, canvas, instructor terminal)
+├── style.css               # Cyberpunk design system, responsive layouts, glassmorphism
+├── main.js                 # Frontend orchestrator: validation, state machine, DOM renderers
+├── algorithms.py           # Python visualizer engine & Pyodide FFI bindings
+├── algorithms.cpp          # C++ visualizer engine & Emscripten WASM bindings
+├── compile_wasm.sh         # WASM compilation script (macOS / Linux)
+├── compile_wasm.bat        # WASM compilation script (Windows)
 ├── tests/
-│   ├── test_algorithms.py  # Python test suite (pytest, 18 tests)
-│   └── test_algorithms.cpp # C++ test suite (native g++, 17 checks)
+│   ├── test_algorithms.py  # Python test suite (pytest - 18 tests)
+│   └── test_algorithms.cpp # Native C++ test runner (17 assertions)
 └── .github/workflows/
-    ├── test.yml            # CI: Python + C++ tests on every push/PR
-    └── deploy.yml          # CI: compile WASM → deploy to GitHub Pages
+    ├── test.yml            # CI pipeline: Runs Python & C++ tests on push/PR
+    └── deploy.yml          # CD pipeline: Compiles WASM & deploys to GitHub Pages
 ```
-
----
-
-## Input constraints
-
-| Parameter | Limit | Reason |
-|---|---|---|
-| Knapsack items | ≤ 12 | DP table stays readable on-screen |
-| Knapsack capacity | ≤ 50 | (items+1) × (capacity+1) cells |
-| LCS string length | ≤ 15 chars each | Grid fits without horizontal scroll |
-| Sort array length | ≤ 25 elements | Bar chart stays legible |
-
----
-
-## Key engineering notes
-
-- **Stale-input bug fixed:** render functions read from a parameter cache (`state.ks`, `state.lcs`) frozen at init time, not from live DOM inputs. Editing a field mid-animation cannot desync highlights or totals.
-- **Inline validation:** all four initializers validate types, ranges, and counts and show errors in dedicated slots — no `alert()`.
-- **Polymorphic dispatch:** `createVisualizer(kind, ...args)` routes to the active engine in one function. Adding a third backend requires changing only that function.
-- **Mobile layout:** sidebar collapses to a hamburger menu below 900 px; content stacks to single-column.
-- **Performance meter:** sidebar shows which engine ran and how long it took to generate all steps, making the Python vs WASM speed difference concrete.
 
 ---
 
 ## License
 
-MIT © 2025 vkDemon1
+MIT © 2025 [vkDemon1](https://github.com/vkDemon1)
