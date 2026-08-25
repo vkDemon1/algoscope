@@ -936,3 +936,238 @@ input[type="range"] {
     0% { transform: scale(0.95); opacity: 0.8; }
     100% { transform: scale(1); opacity: 1; }
 }
+
+/* ==========================================
+ * DIJKSTRA GRID PATHFINDING STYLES
+ * ========================================== */
+.grid-legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+}
+
+.legend-box {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid var(--card-border);
+}
+
+.box-start { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
+.box-target { background: var(--accent-pink); box-shadow: 0 0 6px var(--accent-pink); }
+.box-wall { background: #3a3b5c; border-color: #585a8a; }
+.box-visited { background: rgba(0, 229, 255, 0.25); border-color: var(--accent-cyan); }
+.box-path { background: #ffea00; box-shadow: 0 0 8px #ffea00; }
+
+.dijkstra-grid-container {
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+    padding: 8px 0;
+}
+
+.dijkstra-grid {
+    display: grid;
+    grid-template-columns: repeat(15, 32px);
+    grid-template-rows: repeat(10, 32px);
+    gap: 4px;
+    user-select: none;
+}
+
+.d-cell {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-family: 'Fira Code', monospace;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.d-cell:hover {
+    border-color: var(--accent-cyan);
+    transform: scale(1.08);
+}
+
+.d-cell.cell-start {
+    background: var(--accent-green) !important;
+    color: #000;
+    font-weight: bold;
+    box-shadow: 0 0 8px var(--accent-green);
+}
+
+.d-cell.cell-target {
+    background: var(--accent-pink) !important;
+    color: #fff;
+    font-weight: bold;
+    box-shadow: 0 0 8px var(--accent-pink);
+}
+
+.d-cell.cell-wall {
+    background: #3a3b5c !important;
+    border-color: #585a8a !important;
+    transform: scale(0.96);
+}
+
+.d-cell.cell-visited {
+    background: rgba(0, 229, 255, 0.25) !important;
+    border-color: var(--accent-cyan) !important;
+    color: #fff;
+}
+
+.d-cell.cell-curr {
+    background: var(--accent-yellow) !important;
+    color: #000;
+    font-weight: bold;
+    box-shadow: 0 0 12px var(--accent-yellow);
+    animation: zoom-in 0.2s ease;
+}
+
+.d-cell.cell-path {
+    background: #ffea00 !important;
+    color: #000;
+    font-weight: bold;
+    box-shadow: 0 0 10px #ffea00;
+}
+
+/* ==========================================
+ * TIMELINE SCRUBBER & OPERATION METRICS BAR
+ * ========================================== */
+.control-deck-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 16px;
+}
+
+.timeline-metrics-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--card-border);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.scrubber-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 240px;
+}
+
+.scrubber-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+#timeline-scrubber {
+    flex: 1;
+    accent-color: var(--accent-cyan);
+    cursor: pointer;
+}
+
+.operation-metrics-bar {
+    display: flex;
+    gap: 16px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.metric-item b {
+    color: var(--accent-cyan);
+}
+
+/* ==========================================
+ * SYNCHRONIZED CODE VIEWER CARD
+ * ========================================== */
+.code-card {
+    display: flex;
+    flex-direction: column;
+    height: 340px;
+    margin-top: 16px;
+}
+
+.code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.code-lang-buttons {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px;
+    border-radius: 6px;
+    border: 1px solid var(--card-border);
+}
+
+.code-lang-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.code-lang-btn.active {
+    background: var(--accent-purple);
+    color: #fff;
+}
+
+.code-viewer-container {
+    flex: 1;
+    background: #0d0f1a;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    overflow-y: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.code-line {
+    display: block;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.code-line.line-highlight {
+    background: rgba(0, 229, 255, 0.18);
+    color: #fff;
+    font-weight: 600;
+    border-left: 3px solid var(--accent-cyan);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+}
+

@@ -120,12 +120,53 @@ void test_mergesort() {
     CHECK(single.get_total_steps() > 0, "single-element array produces steps without crashing");
 }
 
+void test_dijkstra() {
+    std::cout << "-- Dijkstra --\n";
+    {
+        std::vector<std::vector<int>> grid = {
+            {0, 0, 0},
+            {1, 1, 0},
+            {0, 0, 0}
+        };
+        DijkstraVisualizer viz(grid, {0, 0}, {2, 0});
+        std::string last = viz.get_step(viz.get_total_steps() - 1);
+        CHECK(last.find("\"stage\":\"complete\"") != std::string::npos, "Dijkstra reaches target successfully");
+    }
+    {
+        std::vector<std::vector<int>> grid = {
+            {0, 1, 0},
+            {1, 1, 0},
+            {0, 0, 0}
+        };
+        DijkstraVisualizer viz(grid, {0, 0}, {0, 2});
+        std::string last = viz.get_step(viz.get_total_steps() - 1);
+        CHECK(last.find("\"stage\":\"no_path\"") != std::string::npos, "Dijkstra reports no_path when target blocked");
+    }
+}
+
+void test_edit_distance() {
+    std::cout << "-- Edit Distance --\n";
+    {
+        EditDistanceVisualizer viz("kitten", "sitting");
+        std::string last = viz.get_step(viz.get_total_steps() - 1);
+        CHECK(viz.get_total_steps() > 0, "EditDistance(kitten, sitting) step sequence generated");
+    }
+    {
+        EditDistanceVisualizer viz("hello", "hello");
+        std::string last = viz.get_step(viz.get_total_steps() - 1);
+        CHECK(viz.get_total_steps() > 0, "EditDistance(hello, hello) step sequence generated");
+    }
+}
+
 int main() {
     test_knapsack();
     test_lcs();
     test_quicksort();
     test_mergesort();
+    test_dijkstra();
+    test_edit_distance();
 
     std::cout << "\n" << (failures == 0 ? "ALL TESTS PASSED" : "SOME TESTS FAILED") << "\n";
     return failures == 0 ? 0 : 1;
 }
+

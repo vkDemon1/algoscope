@@ -943,6 +943,463 @@ public:
     int get_total_steps() { return steps_json.size(); }
 };
 
+// ==========================================
+// 5. DIJKSTRA SHORTEST PATH VISUALIZER (C++)
+// ==========================================
+#include <queue>
+#include <map>
+
+struct DijkstraStep {
+    std::string stage;
+    std::vector<std::vector<int>> grid;
+    std::vector<std::vector<int>> distances;
+    std::vector<std::vector<bool>> visited;
+    std::vector<int> currentNode;
+    std::vector<std::vector<int>> neighbors;
+    std::vector<std::vector<int>> compareCells;
+    std::vector<std::vector<int>> path;
+    int codeLine;
+    std::string description;
+};
+
+class DijkstraVisualizer {
+private:
+    std::vector<std::vector<int>> grid;
+    int rows, cols;
+    std::vector<int> start;
+    std::vector<int> target;
+    std::vector<std::string> steps_json;
+
+    std::string serialize_step(const DijkstraStep& step) {
+        std::stringstream ss;
+        ss << "{";
+        ss << "\"stage\":\"" << step.stage << "\",";
+
+        // Grid
+        ss << "\"grid\":[";
+        for (size_t r = 0; r < step.grid.size(); ++r) {
+            ss << "[";
+            for (size_t c = 0; c < step.grid[r].size(); ++c) {
+                ss << step.grid[r][c];
+                if (c + 1 < step.grid[r].size()) ss << ",";
+            }
+            ss << "]";
+            if (r + 1 < step.grid.size()) ss << ",";
+        }
+        ss << "],";
+
+        // Distances
+        ss << "\"distances\":[";
+        for (size_t r = 0; r < step.distances.size(); ++r) {
+            ss << "[";
+            for (size_t c = 0; c < step.distances[r].size(); ++c) {
+                ss << step.distances[r][c];
+                if (c + 1 < step.distances[r].size()) ss << ",";
+            }
+            ss << "]";
+            if (r + 1 < step.distances.size()) ss << ",";
+        }
+        ss << "],";
+
+        // Visited
+        ss << "\"visited\":[";
+        for (size_t r = 0; r < step.visited.size(); ++r) {
+            ss << "[";
+            for (size_t c = 0; c < step.visited[r].size(); ++c) {
+                ss << (step.visited[r][c] ? "true" : "false");
+                if (c + 1 < step.visited[r].size()) ss << ",";
+            }
+            ss << "]";
+            if (r + 1 < step.visited.size()) ss << ",";
+        }
+        ss << "],";
+
+        // Current Node
+        ss << "\"currentNode\":[" << step.currentNode[0] << "," << step.currentNode[1] << "],";
+
+        // Neighbors
+        ss << "\"neighbors\":[";
+        for (size_t i = 0; i < step.neighbors.size(); ++i) {
+            ss << "[" << step.neighbors[i][0] << "," << step.neighbors[i][1] << "]";
+            if (i + 1 < step.neighbors.size()) ss << ",";
+        }
+        ss << "],";
+
+        // Compare Cells
+        ss << "\"compareCells\":[";
+        for (size_t i = 0; i < step.compareCells.size(); ++i) {
+            ss << "[" << step.compareCells[i][0] << "," << step.compareCells[i][1] << "]";
+            if (i + 1 < step.compareCells.size()) ss << ",";
+        }
+        ss << "],";
+
+        // Path
+        ss << "\"path\":[";
+        for (size_t i = 0; i < step.path.size(); ++i) {
+            ss << "[" << step.path[i][0] << "," << step.path[i][1] << "]";
+            if (i + 1 < step.path.size()) ss << ",";
+        }
+        ss << "],";
+
+        ss << "\"pq\":[],";
+        ss << "\"codeLine\":" << step.codeLine << ",";
+        ss << "\"description\":\"" << escape_json_string(step.description) << "\"";
+        ss << "}";
+        return ss.str();
+    }
+
+    void generate_steps() {
+        if (rows == 0 || cols == 0) return;
+        std::vector<std::vector<int>> dist(rows, std::vector<int>(cols, -1));
+        std::vector<std::vector<bool>> visited(rows, std::vector<bool>(cols, false));
+        std::map<std::pair<int, int>, std::pair<int, int>> parent;
+
+        int sr = start[0], sc = start[1];
+        int tr = target[0], tc = target[1];
+
+        dist[sr][sc] = 0;
+        using NodeState = std::tuple<int, int, int>; // dist, r, c
+        std::priority_queue<NodeState, std::vector<NodeState>, std::greater<NodeState>> pq;
+        pq.push({0, sr, sc});
+
+        DijkstraStep step;
+        step.grid = grid;
+        step.distances = dist;
+        step.visited = visited;
+        step.currentNode = {sr, sc};
+        step.neighbors = {};
+        step.compareCells = {};
+        step.path = {};
+        step.stage = "initialization";
+        step.codeLine = 1;
+        step.description = "<b>Instructor Note (WASM):</b> Initializing Dijkstra's Shortest Path on " +
+                           std::to_string(rows) + "x" + std::to_string(cols) + " grid.";
+        steps_json.push_back(serialize_step(step));
+
+        bool found = false;
+        int dr[] = {-1, 1, 0, 0};
+        int dc[] = {0, 0, -1, 1};
+
+        while (!pq.empty()) {
+            auto [d, r, c] = pq.top();
+            pq.pop();
+
+            if (visited[r][c]) continue;
+            visited[r][c] = true;
+
+            step.stage = "exploration";
+            step.distances = dist;
+            step.visited = visited;
+            step.currentNode = {r, c};
+            step.neighbors = {};
+            step.compareCells = {};
+            step.codeLine = 4;
+            step.description = "<b>Instructor Note (WASM):</b> Extracted node (" + std::to_string(r) + "," +
+                               std::to_string(c) + ") with min tentative distance = " + std::to_string(d) + ".";
+            steps_json.push_back(serialize_step(step));
+
+            if (r == tr && c == tc) {
+                found = true;
+                break;
+            }
+
+            for (int i = 0; i < 4; ++i) {
+                int nr = r + dr[i];
+                int nc = c + dc[i];
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                    if (grid[nr][nc] == 1 || visited[nr][nc]) continue;
+
+                    int new_d = d + 1;
+                    if (dist[nr][nc] == -1 || new_d < dist[nr][nc]) {
+                        dist[nr][nc] = new_d;
+                        parent[{nr, nc}] = {r, c};
+                        pq.push({new_d, nr, nc});
+
+                        step.stage = "relax_neighbor";
+                        step.distances = dist;
+                        step.visited = visited;
+                        step.currentNode = {r, c};
+                        step.neighbors = {{nr, nc}};
+                        step.compareCells = {{r, c}, {nr, nc}};
+                        step.codeLine = 8;
+                        step.description = "<b>Instructor Note (WASM):</b> Relaxing edge to (" + std::to_string(nr) +
+                                           "," + std::to_string(nc) + "). Tentative distance = " + std::to_string(new_d) + ".";
+                        steps_json.push_back(serialize_step(step));
+                    }
+                }
+            }
+        }
+
+        if (found) {
+            std::vector<std::vector<int>> path;
+            std::pair<int, int> curr = {tr, tc};
+            while (parent.find(curr) != parent.end()) {
+                path.push_back({curr.first, curr.second});
+                curr = parent[curr];
+            }
+            path.push_back({sr, sc});
+            std::reverse(path.begin(), path.end());
+
+            step.stage = "complete";
+            step.distances = dist;
+            step.visited = visited;
+            step.currentNode = {tr, tc};
+            step.neighbors = {};
+            step.compareCells = {};
+            step.path = path;
+            step.codeLine = 12;
+            step.description = "<b>Instructor Note (WASM):</b> Target reached! Shortest distance = " +
+                               std::to_string(dist[tr][tc]) + ". Path length = " + std::to_string(path.size()) + " nodes.";
+            steps_json.push_back(serialize_step(step));
+        } else {
+            step.stage = "no_path";
+            step.distances = dist;
+            step.visited = visited;
+            step.currentNode = {-1, -1};
+            step.neighbors = {};
+            step.compareCells = {};
+            step.path = {};
+            step.codeLine = 14;
+            step.description = "<b>Instructor Note (WASM):</b> Priority Queue exhausted. No valid path exists to target.";
+            steps_json.push_back(serialize_step(step));
+        }
+    }
+
+public:
+    DijkstraVisualizer(std::vector<std::vector<int>> g, std::vector<int> s, std::vector<int> t)
+        : grid(g), start(s), target(t) {
+        rows = grid.size();
+        cols = rows > 0 ? grid[0].size() : 0;
+        generate_steps();
+    }
+
+#ifdef __EMSCRIPTEN__
+    DijkstraVisualizer(emscripten::val grid_js, emscripten::val start_js, emscripten::val target_js)
+        : DijkstraVisualizer(val_to_grid(grid_js), val_to_vector(start_js), val_to_vector(target_js)) {}
+#endif
+
+    std::string get_step(int idx) {
+        if (idx >= 0 && idx < (int)steps_json.size()) return steps_json[idx];
+        return "";
+    }
+    int get_total_steps() { return steps_json.size(); }
+};
+
+// ==========================================
+// 6. EDIT DISTANCE (LEVENSHTEIN DP) VISUALIZER (C++)
+// ==========================================
+struct EditDistanceStep {
+    std::string stage;
+    std::vector<std::vector<int>> matrix;
+    int currentRow;
+    int currentCol;
+    std::vector<std::vector<int>> compareCells;
+    std::vector<std::vector<int>> backtrackPath;
+    std::vector<std::string> operations;
+    std::string s1;
+    std::string s2;
+    int codeLine;
+    std::string description;
+};
+
+class EditDistanceVisualizer {
+private:
+    std::string s1, s2;
+    int n, m;
+    std::vector<std::vector<int>> matrix;
+    std::vector<std::string> steps_json;
+
+    std::string serialize_step(const EditDistanceStep& step) {
+        std::stringstream ss;
+        ss << "{";
+        ss << "\"stage\":\"" << step.stage << "\",";
+
+        // Matrix
+        ss << "\"matrix\":[";
+        for (size_t r = 0; r < step.matrix.size(); ++r) {
+            ss << "[";
+            for (size_t c = 0; c < step.matrix[r].size(); ++c) {
+                if (step.matrix[r][c] == -1) ss << "null";
+                else ss << step.matrix[r][c];
+                if (c + 1 < step.matrix[r].size()) ss << ",";
+            }
+            ss << "]";
+            if (r + 1 < step.matrix.size()) ss << ",";
+        }
+        ss << "],";
+
+        ss << "\"currentRow\":" << step.currentRow << ",";
+        ss << "\"currentCol\":" << step.currentCol << ",";
+
+        // Compare Cells
+        ss << "\"compareCells\":[";
+        for (size_t i = 0; i < step.compareCells.size(); ++i) {
+            ss << "[" << step.compareCells[i][0] << "," << step.compareCells[i][1] << "]";
+            if (i + 1 < step.compareCells.size()) ss << ",";
+        }
+        ss << "],";
+
+        // Backtrack Path
+        ss << "\"backtrackPath\":[";
+        for (size_t i = 0; i < step.backtrackPath.size(); ++i) {
+            ss << "[" << step.backtrackPath[i][0] << "," << step.backtrackPath[i][1] << "]";
+            if (i + 1 < step.backtrackPath.size()) ss << ",";
+        }
+        ss << "],";
+
+        // Operations
+        ss << "\"operations\":[";
+        for (size_t i = 0; i < step.operations.size(); ++i) {
+            ss << "\"" << escape_json_string(step.operations[i]) << "\"";
+            if (i + 1 < step.operations.size()) ss << ",";
+        }
+        ss << "],";
+
+        ss << "\"s1\":\"" << escape_json_string(step.s1) << "\",";
+        ss << "\"s2\":\"" << escape_json_string(step.s2) << "\",";
+        ss << "\"codeLine\":" << step.codeLine << ",";
+        ss << "\"description\":\"" << escape_json_string(step.description) << "\"";
+        ss << "}";
+        return ss.str();
+    }
+
+    void generate_steps() {
+        matrix = std::vector<std::vector<int>>(m + 1, std::vector<int>(n + 1, -1));
+        for (int i = 0; i <= m; ++i) matrix[i][0] = i;
+        for (int j = 0; j <= n; ++j) matrix[0][j] = j;
+
+        EditDistanceStep step;
+        step.stage = "initialization";
+        step.matrix = matrix;
+        step.currentRow = 0;
+        step.currentCol = -1;
+        step.compareCells = {};
+        step.backtrackPath = {};
+        step.operations = {};
+        step.s1 = s1;
+        step.s2 = s2;
+        step.codeLine = 1;
+        step.description = "<b>Instructor Note (WASM):</b> Initializing Edit Distance DP table for s1='" + s1 + "' and s2='" + s2 + "'.";
+        steps_json.push_back(serialize_step(step));
+
+        for (int i = 1; i <= m; ++i) {
+            char c2 = s2[i - 1];
+            for (int j = 1; j <= n; ++j) {
+                char c1 = s1[j - 1];
+                int cost_del = matrix[i - 1][j] + 1;
+                int cost_ins = matrix[i][j - 1] + 1;
+                int cost_sub = matrix[i - 1][j - 1] + (c1 == c2 ? 0 : 1);
+                int best_val = std::min({cost_del, cost_ins, cost_sub});
+                matrix[i][j] = best_val;
+
+                step.stage = "calculation";
+                step.matrix = matrix;
+                step.currentRow = i;
+                step.currentCol = j;
+                step.compareCells = {{i - 1, j}, {i, j - 1}, {i - 1, j - 1}};
+                step.codeLine = 6;
+                step.description = "<b>Instructor Note (WASM):</b> dp[" + std::to_string(i) + "][" + std::to_string(j) +
+                                   "] = " + std::to_string(best_val) + ". Comparing '" + c1 + "' vs '" + c2 + "'.";
+                steps_json.push_back(serialize_step(step));
+            }
+        }
+
+        std::vector<std::vector<int>> backtrack_path;
+        std::vector<std::string> operations;
+        int curr_i = m, curr_j = n;
+        backtrack_path.push_back({curr_i, curr_j});
+
+        step.stage = "backtracking_start";
+        step.matrix = matrix;
+        step.currentRow = curr_i;
+        step.currentCol = curr_j;
+        step.compareCells = {};
+        step.backtrackPath = backtrack_path;
+        step.operations = operations;
+        step.codeLine = 10;
+        step.description = "<b>Instructor Note (WASM):</b> Matrix complete! Min edit distance = " +
+                           std::to_string(matrix[m][n]) + ". Reconstructing operations.";
+        steps_json.push_back(serialize_step(step));
+
+        while (curr_i > 0 || curr_j > 0) {
+            int val = matrix[curr_i][curr_j];
+            if (curr_i > 0 && curr_j > 0) {
+                char c1 = s1[curr_j - 1];
+                char c2 = s2[curr_i - 1];
+                int diag_cost = (c1 == c2 ? 0 : 1);
+                if (val == matrix[curr_i - 1][curr_j - 1] + diag_cost) {
+                    std::string op = (c1 == c2 ? "Keep '" + std::string(1, c1) + "' (Match)" : "Substitute '" + std::string(1, c1) + "' -> '" + std::string(1, c2) + "'");
+                    operations.push_back(op);
+                    curr_i--; curr_j--;
+                    backtrack_path.push_back({curr_i, curr_j});
+                    step.stage = "backtracking";
+                    step.matrix = matrix;
+                    step.currentRow = curr_i;
+                    step.currentCol = curr_j;
+                    step.backtrackPath = backtrack_path;
+                    step.operations = operations;
+                    step.codeLine = 12;
+                    step.description = "<b>Instructor Note (WASM):</b> " + op;
+                    steps_json.push_back(serialize_step(step));
+                    continue;
+                }
+            }
+            if (curr_i > 0 && val == matrix[curr_i - 1][curr_j] + 1) {
+                std::string op = "Insert '" + std::string(1, s2[curr_i - 1]) + "'";
+                operations.push_back(op);
+                curr_i--;
+                backtrack_path.push_back({curr_i, curr_j});
+                step.stage = "backtracking";
+                step.matrix = matrix;
+                step.currentRow = curr_i;
+                step.currentCol = curr_j;
+                step.backtrackPath = backtrack_path;
+                step.operations = operations;
+                step.codeLine = 14;
+                step.description = "<b>Instructor Note (WASM):</b> " + op;
+                steps_json.push_back(serialize_step(step));
+            } else if (curr_j > 0 && val == matrix[curr_i][curr_j - 1] + 1) {
+                std::string op = "Delete '" + std::string(1, s1[curr_j - 1]) + "'";
+                operations.push_back(op);
+                curr_j--;
+                backtrack_path.push_back({curr_i, curr_j});
+                step.stage = "backtracking";
+                step.matrix = matrix;
+                step.currentRow = curr_i;
+                step.currentCol = curr_j;
+                step.backtrackPath = backtrack_path;
+                step.operations = operations;
+                step.codeLine = 16;
+                step.description = "<b>Instructor Note (WASM):</b> " + op;
+                steps_json.push_back(serialize_step(step));
+            }
+        }
+
+        step.stage = "complete";
+        step.matrix = matrix;
+        step.currentRow = -1;
+        step.currentCol = -1;
+        step.backtrackPath = backtrack_path;
+        step.operations = operations;
+        step.codeLine = 18;
+        step.description = "<b>Instructor Note (WASM):</b> Edit Distance complete! Min distance = " + std::to_string(matrix[m][n]);
+        steps_json.push_back(serialize_step(step));
+    }
+
+public:
+    EditDistanceVisualizer(std::string str1, std::string str2) : s1(str1), s2(str2) {
+        n = s1.length();
+        m = s2.length();
+        generate_steps();
+    }
+
+    std::string get_step(int idx) {
+        if (idx >= 0 && idx < (int)steps_json.size()) return steps_json[idx];
+        return "";
+    }
+    int get_total_steps() { return steps_json.size(); }
+};
+
 #ifdef __EMSCRIPTEN__
 EMSCRIPTEN_BINDINGS(my_module) {
     emscripten::class_<KnapsackVisualizer>("KnapsackVisualizer")
@@ -964,5 +1421,16 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .constructor<emscripten::val>()
         .function("get_step", &MergeSortVisualizer::get_step)
         .function("get_total_steps", &MergeSortVisualizer::get_total_steps);
+
+    emscripten::class_<DijkstraVisualizer>("DijkstraVisualizer")
+        .constructor<emscripten::val, emscripten::val, emscripten::val>()
+        .function("get_step", &DijkstraVisualizer::get_step)
+        .function("get_total_steps", &DijkstraVisualizer::get_total_steps);
+
+    emscripten::class_<EditDistanceVisualizer>("EditDistanceVisualizer")
+        .constructor<std::string, std::string>()
+        .function("get_step", &EditDistanceVisualizer::get_step)
+        .function("get_total_steps", &EditDistanceVisualizer::get_total_steps);
 }
 #endif // __EMSCRIPTEN__
+

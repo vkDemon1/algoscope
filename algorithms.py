@@ -731,7 +731,356 @@ class MergeSortVisualizer:
 
 
 # ==========================================
-# 5. PYODIDE BINDINGS LAYER
+# 5. DIJKSTRA SHORTEST PATH VISUALIZER (Python)
+# ==========================================
+import heapq
+
+class DijkstraVisualizer:
+    def __init__(self, grid, start, target):
+        """
+        grid: 2D list (rows x cols) where 0=empty, 1=wall
+        start: [r, c]
+        target: [r, c]
+        """
+        self.grid = [[int(cell) for cell in row] for row in grid]
+        self.rows = len(self.grid)
+        self.cols = len(self.grid[0]) if self.rows > 0 else 0
+        self.start = [int(start[0]), int(start[1])]
+        self.target = [int(target[0]), int(target[1])]
+        
+        self.steps = []
+        self._generate_steps()
+        
+    def _generate_steps(self):
+        dist = [[float('inf')] * self.cols for _ in range(self.rows)]
+        visited = [[False] * self.cols for _ in range(self.rows)]
+        parent = {}
+        
+        sr, sc = self.start[0], self.start[1]
+        tr, tc = self.target[0], self.target[1]
+        
+        dist[sr][sc] = 0
+        pq = [(0, sr, sc)]
+        
+        def snapshot_dist():
+            return [[(d if d != float('inf') else -1) for d in row] for row in dist]
+            
+        def snapshot_visited():
+            return [row[:] for row in visited]
+
+        def get_pq_snapshot():
+            sorted_pq = sorted(pq)
+            return [{"dist": item[0], "node": [item[1], item[2]]} for item in sorted_pq[:6]]
+
+        # Stage 1: Initialization
+        self.steps.append({
+            "stage": "initialization",
+            "grid": [row[:] for row in self.grid],
+            "distances": snapshot_dist(),
+            "visited": snapshot_visited(),
+            "currentNode": [sr, sc],
+            "neighbors": [],
+            "compareCells": [],
+            "path": [],
+            "pq": get_pq_snapshot(),
+            "codeLine": 1,
+            "description": f"<b>Instructor Note:</b> Initializing Dijkstra's Shortest Path on <code>{self.rows}×{self.cols}</code> grid.<br>"
+                           f"Start Node: <code>({sr}, {sc})</code> (dist=0). Target Node: <code>({tr}, {tc})</code> (dist=∞)."
+        })
+        
+        found = False
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)] # Up, Down, Left, Right
+        
+        while pq:
+            d, r, c = heapq.heappop(pq)
+            
+            if visited[r][c]:
+                continue
+                
+            visited[r][c] = True
+            
+            self.steps.append({
+                "stage": "exploration",
+                "grid": [row[:] for row in self.grid],
+                "distances": snapshot_dist(),
+                "visited": snapshot_visited(),
+                "currentNode": [r, c],
+                "neighbors": [],
+                "compareCells": [],
+                "path": [],
+                "pq": get_pq_snapshot(),
+                "codeLine": 4,
+                "description": f"<b>Instructor Note:</b> Extracted node <code>({r}, {c})</code> with min tentative distance = <b>{d}</b> from Priority Queue.<br>"
+                               f"Marking node <code>({r}, {c})</code> as <b>VISITED</b>."
+            })
+            
+            if r == tr and c == tc:
+                found = True
+                break
+                
+            for dr, dc in directions:
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < self.rows and 0 <= nc < self.cols:
+                    if self.grid[nr][nc] == 1:
+                        continue
+                    if visited[nr][nc]:
+                        continue
+                        
+                    new_d = d + 1
+                    
+                    if new_d < dist[nr][nc]:
+                        dist[nr][nc] = new_d
+                        parent[(nr, nc)] = (r, c)
+                        heapq.heappush(pq, (new_d, nr, nc))
+                        
+                        self.steps.append({
+                            "stage": "relax_neighbor",
+                            "grid": [row[:] for row in self.grid],
+                            "distances": snapshot_dist(),
+                            "visited": snapshot_visited(),
+                            "currentNode": [r, c],
+                            "neighbors": [[nr, nc]],
+                            "compareCells": [[r, c], [nr, nc]],
+                            "path": [],
+                            "pq": get_pq_snapshot(),
+                            "codeLine": 8,
+                            "description": f"<b>Instructor Note:</b> Relaxing edge from <code>({r}, {c})</code> to neighbor <code>({nr}, {nc})</code>.<br>"
+                                           f"Updated tentative distance of <code>({nr}, {nc})</code>: <b>{new_d}</b>. Pushed to Priority Queue."
+                        })
+
+        path = []
+        if found:
+            curr = (tr, tc)
+            while curr in parent:
+                path.append([curr[0], curr[1]])
+                curr = parent[curr]
+            path.append([sr, sc])
+            path.reverse()
+            
+            self.steps.append({
+                "stage": "complete",
+                "grid": [row[:] for row in self.grid],
+                "distances": snapshot_dist(),
+                "visited": snapshot_visited(),
+                "currentNode": [tr, tc],
+                "neighbors": [],
+                "compareCells": [],
+                "path": list(path),
+                "pq": [],
+                "codeLine": 12,
+                "description": f"<b>Instructor Note:</b> Target <code>({tr}, {tc})</code> reached!<br>"
+                               f"Shortest path distance = <b>{dist[tr][tc]}</b>. Path length = <b>{len(path)}</b> nodes."
+            })
+        else:
+            self.steps.append({
+                "stage": "no_path",
+                "grid": [row[:] for row in self.grid],
+                "distances": snapshot_dist(),
+                "visited": snapshot_visited(),
+                "currentNode": [-1, -1],
+                "neighbors": [],
+                "compareCells": [],
+                "path": [],
+                "pq": [],
+                "codeLine": 14,
+                "description": f"<b>Instructor Note:</b> Priority Queue exhausted without reaching target <code>({tr}, {tc})</code>. No path exists."
+            })
+
+    def get_step(self, idx):
+        if 0 <= idx < len(self.steps):
+            return json.dumps(self.steps[idx])
+        return None
+
+    def get_total_steps(self):
+        return len(self.steps)
+
+
+# ==========================================
+# 6. EDIT DISTANCE (LEVENSHTEIN DP) VISUALIZER (Python)
+# ==========================================
+class EditDistanceVisualizer:
+    def __init__(self, s1, s2):
+        self.s1 = str(s1)
+        self.s2 = str(s2)
+        self.n = len(self.s1) # cols (source)
+        self.m = len(self.s2) # rows (target)
+        
+        self.matrix = [[None] * (self.n + 1) for _ in range(self.m + 1)]
+        for i in range(self.m + 1):
+            self.matrix[i][0] = i
+        for j in range(self.n + 1):
+            self.matrix[0][j] = j
+            
+        self.steps = []
+        self._generate_steps()
+        
+    def _generate_steps(self):
+        self.steps.append({
+            "stage": "initialization",
+            "matrix": [row[:] for row in self.matrix],
+            "currentRow": 0,
+            "currentCol": -1,
+            "compareCells": [],
+            "backtrackPath": [],
+            "operations": [],
+            "s1": self.s1,
+            "s2": self.s2,
+            "codeLine": 1,
+            "description": f"<b>Instructor Note:</b> Initializing Edit Distance DP table for <code>s1 = '{self.s1}'</code> and <code>s2 = '{self.s2}'</code>.<br>"
+                           f"Base cases: Row 0 represents cost to insert characters into empty string; Column 0 represents cost to delete characters."
+        })
+        
+        for i in range(1, self.m + 1):
+            c2 = self.s2[i - 1]
+            for j in range(1, self.n + 1):
+                c1 = self.s1[j - 1]
+                
+                cost_del = self.matrix[i - 1][j] + 1
+                cost_ins = self.matrix[i][j - 1] + 1
+                cost_sub = self.matrix[i - 1][j - 1] + (0 if c1 == c2 else 1)
+                
+                best_val = min(cost_del, cost_ins, cost_sub)
+                self.matrix[i][j] = best_val
+                
+                match_str = f"Match (cost 0)" if c1 == c2 else f"Substitute '{c1}' ➔ '{c2}' (cost 1)"
+                desc = (
+                    f"<b>Instructor Note:</b> Evaluating <code>dp[{i}][{j}]</code> comparing <code>s1[{j}]='{c1}'</code> vs <code>s2[{i}]='{c2}'</code>.<br><br>"
+                    f"• <b>Option A (Delete):</b> <code>dp[{i-1}][{j}] + 1</code> = {self.matrix[i-1][j]} + 1 = <b>{cost_del}</b><br>"
+                    f"• <b>Option B (Insert):</b> <code>dp[{i}][{j-1}] + 1</code> = {self.matrix[i][j-1]} + 1 = <b>{cost_ins}</b><br>"
+                    f"• <b>Option C (Diag):</b> <code>dp[{i-1}][{j-1}] + {0 if c1==c2 else 1}</code> = <b>{cost_sub}</b> ({match_str})<br><br>"
+                    f"<b>Min Cost Chosen:</b> <code>dp[{i}][{j}]</code> = <b>{best_val}</b>."
+                )
+                
+                self.steps.append({
+                    "stage": "calculation",
+                    "matrix": [row[:] for row in self.matrix],
+                    "currentRow": i,
+                    "currentCol": j,
+                    "compareCells": [[i-1, j], [i, j-1], [i-1, j-1]],
+                    "backtrackPath": [],
+                    "operations": [],
+                    "s1": self.s1,
+                    "s2": self.s2,
+                    "codeLine": 6,
+                    "description": desc
+                })
+                
+        backtrack_path = []
+        operations = []
+        curr_i, curr_j = self.m, self.n
+        backtrack_path.append([curr_i, curr_j])
+        
+        self.steps.append({
+            "stage": "backtracking_start",
+            "matrix": [row[:] for row in self.matrix],
+            "currentRow": curr_i,
+            "currentCol": curr_j,
+            "compareCells": [],
+            "backtrackPath": list(backtrack_path),
+            "operations": list(operations),
+            "s1": self.s1,
+            "s2": self.s2,
+            "codeLine": 10,
+            "description": f"<b>Instructor Note:</b> Edit Distance DP matrix calculation complete! Minimum edit distance = <b>{self.matrix[self.m][self.n]}</b>.<br>"
+                           f"Backtracking from <code>dp[{self.m}][{self.n}]</code> to reconstruct optimal edit operations."
+        })
+        
+        while curr_i > 0 or curr_j > 0:
+            val = self.matrix[curr_i][curr_j]
+            
+            if curr_i > 0 and curr_j > 0:
+                c1 = self.s1[curr_j - 1]
+                c2 = self.s2[curr_i - 1]
+                diag_cost = 0 if c1 == c2 else 1
+                if val == self.matrix[curr_i - 1][curr_j - 1] + diag_cost:
+                    if c1 == c2:
+                        op = f"Keep '{c1}' (Match)"
+                    else:
+                        op = f"Substitute '{c1}' ➔ '{c2}'"
+                    operations.append(op)
+                    curr_i -= 1
+                    curr_j -= 1
+                    backtrack_path.append([curr_i, curr_j])
+                    self.steps.append({
+                        "stage": "backtracking",
+                        "matrix": [row[:] for row in self.matrix],
+                        "currentRow": curr_i,
+                        "currentCol": curr_j,
+                        "compareCells": [],
+                        "backtrackPath": list(backtrack_path),
+                        "operations": list(reversed(operations)),
+                        "s1": self.s1,
+                        "s2": self.s2,
+                        "codeLine": 12,
+                        "description": f"<b>Instructor Note:</b> Diagonal move to <code>dp[{curr_i}][{curr_j}]</code>: <b>{op}</b>."
+                    })
+                    continue
+                    
+            if curr_i > 0 and val == self.matrix[curr_i - 1][curr_j] + 1:
+                op = f"Insert '{self.s2[curr_i - 1]}'"
+                operations.append(op)
+                curr_i -= 1
+                backtrack_path.append([curr_i, curr_j])
+                self.steps.append({
+                    "stage": "backtracking",
+                    "matrix": [row[:] for row in self.matrix],
+                    "currentRow": curr_i,
+                    "currentCol": curr_j,
+                    "compareCells": [],
+                    "backtrackPath": list(backtrack_path),
+                    "operations": list(reversed(operations)),
+                    "s1": self.s1,
+                    "s2": self.s2,
+                    "codeLine": 14,
+                    "description": f"<b>Instructor Note:</b> Vertical move up to <code>dp[{curr_i}][{curr_j}]</code>: <b>{op}</b>."
+                })
+            elif curr_j > 0 and val == self.matrix[curr_i][curr_j - 1] + 1:
+                op = f"Delete '{self.s1[curr_j - 1]}'"
+                operations.append(op)
+                curr_j -= 1
+                backtrack_path.append([curr_i, curr_j])
+                self.steps.append({
+                    "stage": "backtracking",
+                    "matrix": [row[:] for row in self.matrix],
+                    "currentRow": curr_i,
+                    "currentCol": curr_j,
+                    "compareCells": [],
+                    "backtrackPath": list(backtrack_path),
+                    "operations": list(reversed(operations)),
+                    "s1": self.s1,
+                    "s2": self.s2,
+                    "codeLine": 16,
+                    "description": f"<b>Instructor Note:</b> Horizontal move left to <code>dp[{curr_i}][{curr_j}]</code>: <b>{op}</b>."
+                })
+
+        ops_log = "<br>".join([f"• {op}" for op in reversed(operations)])
+        self.steps.append({
+            "stage": "complete",
+            "matrix": [row[:] for row in self.matrix],
+            "currentRow": -1,
+            "currentCol": -1,
+            "compareCells": [],
+            "backtrackPath": list(backtrack_path),
+            "operations": list(reversed(operations)),
+            "s1": self.s1,
+            "s2": self.s2,
+            "codeLine": 18,
+            "description": f"<b>Instructor Note:</b> Backtracking complete!<br><br>"
+                           f"<b>Total Edit Distance:</b> <b>{self.matrix[self.m][self.n]}</b><br><br>"
+                           f"<b>Reconstructed Transformations:</b><br>{ops_log if ops_log else 'Strings are identical.'}"
+        })
+
+    def get_step(self, idx):
+        if 0 <= idx < len(self.steps):
+            return json.dumps(self.steps[idx])
+        return None
+
+    def get_total_steps(self):
+        return len(self.steps)
+
+
+# ==========================================
+# 7. PYODIDE BINDINGS LAYER
 # ==========================================
 try:
     from pyodide.ffi import create_proxy
@@ -748,12 +1097,21 @@ try:
         
     def create_mergesort_visualizer(array_js):
         return MergeSortVisualizer(list(array_js))
+
+    def create_dijkstra_visualizer(grid_js, start_js, target_js):
+        grid = [list(row) for row in list(grid_js)]
+        return DijkstraVisualizer(grid, list(start_js), list(target_js))
+
+    def create_edit_distance_visualizer(s1, s2):
+        return EditDistanceVisualizer(s1, s2)
         
     # Expose constructors to JavaScript window object
     window.createKnapsackVisualizer = create_proxy(create_knapsack_visualizer)
     window.createLCSVisualizer = create_proxy(create_lcs_visualizer)
     window.createQuickSortVisualizer = create_proxy(create_quicksort_visualizer)
     window.createMergeSortVisualizer = create_proxy(create_mergesort_visualizer)
+    window.createDijkstraVisualizer = create_proxy(create_dijkstra_visualizer)
+    window.createEditDistanceVisualizer = create_proxy(create_edit_distance_visualizer)
     print("Python algorithms registered successfully with window!")
     
     # Notify JS that everything is loaded and bound
@@ -767,3 +1125,4 @@ except Exception as e:
         traceback.print_exc(file=sys.stderr)
     except:
         pass
+

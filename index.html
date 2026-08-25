@@ -59,6 +59,20 @@
                             <span>Merge Sort (In-Place)</span>
                         </button>
                     </li>
+                    <li>
+                        <button id="nav-dijkstra" class="nav-item-btn">
+                            <!-- SVG Path Icon -->
+                            <svg viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+                            <span>Dijkstra Shortest Path</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button id="nav-editdistance" class="nav-item-btn">
+                            <!-- SVG Edit Icon -->
+                            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            <span>Edit Distance DP</span>
+                        </button>
+                    </li>
                 </ul>
             </nav>
             
@@ -163,6 +177,46 @@
                         </div>
                     </div>
 
+                    <!-- 5. Dijkstra Shortest Path View -->
+                    <div id="view-dijkstra" class="viz-view">
+                        <div class="dp-stats-bar">
+                            <div>Start: <b id="dijkstra-stat-start" style="color: var(--accent-green);">(0, 0)</b></div>
+                            <div>Target: <b id="dijkstra-stat-target" style="color: var(--accent-pink);">(9, 14)</b></div>
+                            <div>Visited Nodes: <b id="dijkstra-stat-visited" style="color: var(--accent-cyan);">0</b></div>
+                            <div>Shortest Path: <b id="dijkstra-stat-dist" style="color: var(--accent-yellow);">-</b></div>
+                        </div>
+                        <div class="grid-legend">
+                            <span class="legend-item"><span class="legend-box box-start"></span> Start</span>
+                            <span class="legend-item"><span class="legend-box box-target"></span> Target</span>
+                            <span class="legend-item"><span class="legend-box box-wall"></span> Wall</span>
+                            <span class="legend-item"><span class="legend-box box-visited"></span> Visited</span>
+                            <span class="legend-item"><span class="legend-box box-path"></span> Shortest Path</span>
+                        </div>
+                        <div class="dijkstra-grid-container">
+                            <div id="dijkstra-grid" class="dijkstra-grid">
+                                <!-- 10x15 Grid Cells -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Edit Distance DP View -->
+                    <div id="view-editdistance" class="viz-view">
+                        <div class="dp-stats-bar">
+                            <div>Source (s1): <b id="ed-stat-s1" style="color: var(--accent-cyan); font-family: monospace;">-</b></div>
+                            <div>Target (s2): <b id="ed-stat-s2" style="color: var(--accent-pink); font-family: monospace;">-</b></div>
+                            <div>Min Edit Distance: <b id="ed-stat-dist" style="color: var(--accent-green);">0</b></div>
+                        </div>
+                        <div class="sequence-ribbon">
+                            <span class="seq-label">Operations Log:</span>
+                            <span id="ed-ribbon-text" class="seq-string">-</span>
+                        </div>
+                        <div class="dp-table-scroll">
+                            <table id="ed-table" class="grid-matrix">
+                                <!-- Table rows -->
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Parameters Config Card -->
@@ -240,22 +294,66 @@
                             <button id="btn-ms-init" class="btn btn-primary">Initialize visualizer</button>
                         </div>
                     </div>
+
+                    <!-- Dijkstra Config -->
+                    <div id="config-dijkstra" class="config-tab-view">
+                        <div class="config-header">Dijkstra Grid Pathfinding Controls</div>
+                        <div class="config-error" id="config-error-dijkstra"></div>
+                        <div class="config-grid">
+                            <button id="btn-dijkstra-clear-walls" class="btn btn-secondary">Clear Walls</button>
+                            <button id="btn-dijkstra-random-walls" class="btn btn-secondary">Random Maze</button>
+                            <button id="btn-dijkstra-init" class="btn btn-primary">Initialize visualizer</button>
+                        </div>
+                    </div>
+
+                    <!-- Edit Distance Config -->
+                    <div id="config-editdistance" class="config-tab-view">
+                        <div class="config-header">Edit Distance (Levenshtein DP) Input</div>
+                        <div class="config-error" id="config-error-editdistance"></div>
+                        <div class="config-grid">
+                            <div class="form-group">
+                                <label for="input-ed-s1">Source String (s1)</label>
+                                <input type="text" id="input-ed-s1" value="kitten">
+                            </div>
+                            <div class="form-group">
+                                <label for="input-ed-s2">Target String (s2)</label>
+                                <input type="text" id="input-ed-s2" value="sitting">
+                            </div>
+                            <button id="btn-ed-init" class="btn btn-primary">Initialize visualizer</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Player Deck Controls Card -->
                 <div class="card control-deck">
-                    <span id="label-step-tracker" class="step-tracker">Step 0 / 0</span>
-                    
-                    <div class="player-controls-group">
-                        <button id="player-btn-reset" class="btn btn-secondary player-btn" title="Reset View">↺</button>
-                        <button id="player-btn-prev" class="btn btn-secondary player-btn" title="Step Back">⏮</button>
-                        <button id="player-btn-play" class="btn btn-primary player-btn" title="Play Simulation">▶</button>
-                        <button id="player-btn-next" class="btn btn-secondary player-btn" title="Step Forward">⏭</button>
+                    <div class="control-deck-row">
+                        <span id="label-step-tracker" class="step-tracker">Step 0 / 0</span>
+                        
+                        <div class="player-controls-group">
+                            <button id="player-btn-reset" class="btn btn-secondary player-btn" title="Reset View">↺</button>
+                            <button id="player-btn-prev" class="btn btn-secondary player-btn" title="Step Back">⏮</button>
+                            <button id="player-btn-play" class="btn btn-primary player-btn" title="Play Simulation">▶</button>
+                            <button id="player-btn-next" class="btn btn-secondary player-btn" title="Step Forward">⏭</button>
+                            <button id="btn-audio-toggle" class="btn btn-secondary player-btn" title="Toggle Sound Synth">🔊</button>
+                        </div>
+                        
+                        <div class="slider-group">
+                            <span>Simulation Speed</span>
+                            <input type="range" id="slider-speed" min="50" max="1500" value="800" step="50">
+                        </div>
                     </div>
-                    
-                    <div class="slider-group">
-                        <span>Simulation Speed</span>
-                        <input type="range" id="slider-speed" min="50" max="1500" value="800" step="50">
+
+                    <!-- Timeline Scrubber & Metrics Bar -->
+                    <div class="timeline-metrics-row">
+                        <div class="scrubber-container">
+                            <span class="scrubber-label">Timeline Scrubber:</span>
+                            <input type="range" id="timeline-scrubber" min="0" max="0" value="0" step="1">
+                        </div>
+                        <div class="operation-metrics-bar">
+                            <span class="metric-item">Comparisons: <b id="metric-comparisons">0</b></span>
+                            <span class="metric-item">Accesses/Swaps: <b id="metric-accesses">0</b></span>
+                            <span class="metric-item">Stack Depth: <b id="metric-stack">0</b></span>
+                        </div>
                     </div>
                 </div>
 
@@ -277,6 +375,18 @@
                     <div class="instructor-console" id="instructor-terminal">
                         Select parameters and click "Initialize Visualizer" to begin tracing execution steps.
                     </div>
+                </div>
+
+                <!-- Synchronized Code Viewer Card -->
+                <div class="card code-card">
+                    <div class="code-header">
+                        <span>Synchronized Code Execution</span>
+                        <div class="code-lang-buttons">
+                            <button id="code-btn-py" class="code-lang-btn active">Python</button>
+                            <button id="code-btn-cpp" class="code-lang-btn">C++</button>
+                        </div>
+                    </div>
+                    <pre class="code-viewer-container"><code id="code-viewer-content">Initializing code viewer...</code></pre>
                 </div>
 
             </div>

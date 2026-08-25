@@ -20,6 +20,8 @@ from algorithms import (
     LCSVisualizer,
     QuickSortVisualizer,
     MergeSortVisualizer,
+    DijkstraVisualizer,
+    EditDistanceVisualizer,
 )
 
 
@@ -159,3 +161,42 @@ def test_mergesort_agrees_with_quicksort_on_same_input():
     qs_final = json.loads(qs_viz.get_step(qs_viz.get_total_steps() - 1))
     ms_final = json.loads(ms_viz.get_step(ms_viz.get_total_steps() - 1))
     assert qs_final["array"] == ms_final["array"] == sorted(arr)
+
+
+def test_dijkstra_finds_shortest_path():
+    grid = [
+        [0, 0, 0],
+        [1, 1, 0],
+        [0, 0, 0]
+    ]
+    viz = DijkstraVisualizer(grid, [0, 0], [2, 0])
+    final = json.loads(viz.get_step(viz.get_total_steps() - 1))
+    assert final["stage"] == "complete"
+    assert len(final["path"]) > 0
+    assert final["path"][0] == [0, 0]
+    assert final["path"][-1] == [2, 0]
+
+
+def test_dijkstra_unreachable_target():
+    grid = [
+        [0, 1, 0],
+        [1, 1, 0],
+        [0, 0, 0]
+    ]
+    viz = DijkstraVisualizer(grid, [0, 0], [0, 2])
+    final = json.loads(viz.get_step(viz.get_total_steps() - 1))
+    assert final["stage"] == "no_path"
+    assert final["path"] == []
+
+
+def test_edit_distance_textbook_kitten_sitting():
+    viz = EditDistanceVisualizer("kitten", "sitting")
+    final = json.loads(viz.get_step(viz.get_total_steps() - 1))
+    assert final["matrix"][-1][-1] == 3
+
+
+def test_edit_distance_identical_strings():
+    viz = EditDistanceVisualizer("hello", "hello")
+    final = json.loads(viz.get_step(viz.get_total_steps() - 1))
+    assert final["matrix"][-1][-1] == 0
+
