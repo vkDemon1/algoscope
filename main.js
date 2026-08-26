@@ -292,10 +292,13 @@ window.onPythonLoaded = function() {
     badge.className = 'loading-badge ready';
     console.log("JavaScript: PyScript Engine loaded successfully!");
     initKnapsack();
+    updateCodeViewer();
 };
 
 if (window.createKnapsackVisualizer) {
     window.onPythonLoaded();
+} else {
+    updateCodeViewer();
 }
 
 // --- WASM Lifecycle Bindings ---

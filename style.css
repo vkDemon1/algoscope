@@ -1100,6 +1100,72 @@ input[type="range"] {
 }
 
 /* ==========================================
+ * COMPUTE ENGINE TOGGLE STYLES
+ * ========================================== */
+.engine-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.engine-toggle-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.engine-toggle-buttons {
+    display: flex;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    gap: 4px;
+}
+
+.engine-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.engine-btn:hover:not(:disabled) {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.engine-btn.active {
+    background: var(--accent-purple);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 0 10px rgba(157, 78, 221, 0.35);
+}
+
+.engine-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.engine-perf {
+    font-size: 0.7rem;
+    color: var(--accent-cyan);
+    font-family: 'Fira Code', monospace;
+    min-height: 1rem;
+}
+
+/* ==========================================
  * SYNCHRONIZED CODE VIEWER CARD
  * ========================================== */
 .code-card {
@@ -1122,8 +1188,8 @@ input[type="range"] {
 .code-lang-buttons {
     display: flex;
     gap: 4px;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 2px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 3px;
     border-radius: 6px;
     border: 1px solid var(--card-border);
 }
@@ -1131,16 +1197,27 @@ input[type="range"] {
 .code-lang-btn {
     background: transparent;
     border: none;
+    outline: none;
     color: var(--text-muted);
-    font-size: 0.7rem;
-    padding: 3px 8px;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 4px 10px;
     border-radius: 4px;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.code-lang-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .code-lang-btn.active {
     background: var(--accent-purple);
     color: #fff;
+    font-weight: 600;
+    box-shadow: 0 0 10px rgba(157, 78, 221, 0.35);
 }
 
 .code-viewer-container {
@@ -1159,7 +1236,7 @@ input[type="range"] {
 
 .code-line {
     display: block;
-    padding: 1px 4px;
+    padding: 2px 4px;
     border-radius: 3px;
 }
 
@@ -1170,4 +1247,5 @@ input[type="range"] {
     border-left: 3px solid var(--accent-cyan);
     box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
 }
+
 
