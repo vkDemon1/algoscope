@@ -79,6 +79,7 @@ body {
     letter-spacing: 0.5px;
     background: var(--grad-primary);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
