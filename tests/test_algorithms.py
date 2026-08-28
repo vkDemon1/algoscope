@@ -200,3 +200,28 @@ def test_edit_distance_identical_strings():
     final = json.loads(viz.get_step(viz.get_total_steps() - 1))
     assert final["matrix"][-1][-1] == 0
 
+
+if __name__ == "__main__":
+    import inspect
+    current_module = sys.modules[__name__]
+    test_functions = [
+        obj for name, obj in inspect.getmembers(current_module, inspect.isfunction)
+        if name.startswith("test_")
+    ]
+    
+    passed = 0
+    failed = 0
+    print(f"Running {len(test_functions)} tests in test_algorithms.py...")
+    for test_fn in test_functions:
+        try:
+            test_fn()
+            print(f"  [PASS] {test_fn.__name__}")
+            passed += 1
+        except Exception as e:
+            print(f"  [FAIL] {test_fn.__name__}: {e}")
+            failed += 1
+            
+    print(f"\nResult: {passed} passed, {failed} failed.")
+    sys.exit(0 if failed == 0 else 1)
+
+
