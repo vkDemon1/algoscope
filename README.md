@@ -1,6 +1,6 @@
 # AlgoScope
 
-> **Interactive step-by-step visualizations of classic DP and sorting algorithms — powered by Python (in-browser via PyScript) with an optional WebAssembly backend compiled from C++.**
+> **Interactive step-by-step visualizations of classic DP, graph pathfinding, and sorting algorithms — powered by Python (in-browser via PyScript) with an optional WebAssembly backend compiled from C++.**
 
 [![Tests](https://github.com/vkDemon1/algoscope/actions/workflows/test.yml/badge.svg)](https://github.com/vkDemon1/algoscope/actions/workflows/test.yml)
 [![Pages](https://github.com/vkDemon1/algoscope/actions/workflows/deploy.yml/badge.svg)](https://vkDemon1.github.io/algoscope/)
@@ -11,7 +11,7 @@
 
 ## Overview
 
-**AlgoScope** is a high-performance algorithm visualizer designed to turn complex algorithm executions into intuitive, step-by-step interactive animations. It allows developers and students to pause, step through, and rewind algorithm logic one decision at a time while an **AI Instructor** panel explains every state change in natural language.
+**AlgoScope** is a high-performance algorithm visualizer designed to turn complex algorithm executions into intuitive, step-by-step interactive animations. It allows developers and students to pause, step through, and rewind algorithm logic one decision at a time while an **AI Instructor** panel explains every state change in natural language, accompanied by **synchronized real-time code line highlighting** and **pitch-modulated synthesizer audio**.
 
 ---
 
@@ -23,10 +23,16 @@
 | **LCS Alignment DP** | Character match/mismatch decision logic, cell comparison pointers, diagonal/up/left transitions | Reconstructed Longest Common Subsequence, DP grid alignment matrix |
 | **Quick Sort (Lomuto)** | Pivot selection, dual scanning pointers (`i` and `j`), active partition range bounds, swap highlights | In-place element movement, recursion call stack visualizer |
 | **Merge Sort** | Split & merge phases, main array highlights, live temporary merge buffer | Divided sub-array bounds, merge buffer step-by-step insertion, call stack |
+| **Dijkstra Shortest Path** | Interactive 10×15 2D grid, start/target nodes, click-and-drag obstacle walls, random maze generator | Priority queue exploration, tentative distance matrix relaxation, visited nodes counter, shortest path route trail |
+| **Edit Distance DP** | 2D Levenshtein distance matrix, insert/delete/substitute cost comparisons, cell transitions | Minimum edit operations count, backtracking route highlighting, chronological transformation log (e.g. `kitten` ➔ `sitting`) |
 
-### Interactive Control Suite
+### Interactive Control Suite & Audio-Visual Features
 - **Playback Controls**: Step Next, Step Previous, Auto-Play/Pause, and Instant Reset.
-- **Speed Slider**: Adjustable playback speed (100 ms to 2000 ms per step).
+- **Speed Slider**: Adjustable playback speed (50 ms to 1500 ms per step).
+- **Step Timeline Scrubber**: Interactive scrubber slider to jump directly to any arbitrary execution step $N$.
+- **Live Operation Metrics**: Live counters tracking total comparisons, memory accesses/swaps, and active call stack / priority queue depth.
+- **Synchronized Code Highlight Viewer**: Real-time line-by-line source code tracking for both Python and C++ implementations with execution glow.
+- **Web Audio Synthesizer**: Pitch-modulated audio cues during comparisons, swaps, cell updates, and node explorations with a mute/unmute toggle (🔊 / 🔇).
 - **Dual Compute Engine Toggle**: Instant switching between Python (PyScript) and C++ (WebAssembly).
 - **Performance Meter**: Real-time timing metrics displaying step generation count and engine execution time in milliseconds.
 - **Cyberpunk Dark UI**: Glassmorphic styling with high-contrast accent colors and fully responsive mobile drawer navigation.
@@ -56,13 +62,13 @@ AlgoScope uses a decoupled frontend/backend architecture where two completely in
              └────────────────────────┬────────────────────────┘
                                       ▼
                         Identical JSON Step Schema
-     { stage, matrix/array, currentRow, currentCol, description, ... }
+     { stage, matrix/array/grid, currentRow, currentCol, description, codeLine, ... }
 ```
 
 ### Key Engineering Highlights
-- **Parameter Caching Pattern**: Rendering functions read from a frozen snapshot taken at initialization time (`state.ks`, `state.lcs`), guaranteeing that mid-animation edits to input fields never desynchronize the UI highlights or math.
-- **Inline Validation**: Initializers validate parameter counts, array formats, and numeric boundaries, displaying user-friendly inline messages instead of intrusive browser alerts.
-- **Zero-Dependency Native Testability**: `algorithms.cpp` compiles under both `#ifdef __EMSCRIPTEN__` (for browser WASM export) and standard native C++ (for instant native unit testing).
+- **Parameter Caching Pattern**: Rendering functions read from frozen snapshots taken at initialization time (`state.ks`, `state.lcs`, `state.dijkstra`, `state.editdistance`), guaranteeing that mid-animation edits to input fields never desynchronize UI highlights or math.
+- **Inline Validation**: Initializers validate parameter counts, string lengths, array formats, and numeric boundaries, displaying user-friendly inline messages instead of intrusive browser alerts.
+- **Zero-Dependency Native Testability**: `algorithms.cpp` compiles under both `#ifdef __EMSCRIPTEN__` (for browser WASM export) and standard native C++ (for instant native unit testing without Emscripten).
 
 ---
 
@@ -113,15 +119,18 @@ This generates `algorithms_wasm.js` and `algorithms_wasm.wasm` in the root direc
 
 ## Running the Automated Test Suite
 
-AlgoScope includes unit tests covering all four algorithms across both Python and C++ implementations.
+AlgoScope includes comprehensive unit tests covering all six algorithms across both Python and C++ implementations.
 
-### Python Tests (Pytest)
+### Python Tests
 
 ```bash
-pip install pytest
+# Direct runner (no third-party dependencies required):
+python tests/test_algorithms.py
+
+# Or via pytest:
 pytest tests/test_algorithms.py -v
 ```
-*(Runs 18 unit tests checking textbook cases, edge cases, single elements, duplicates, and step schema structure).*
+*(Runs 22 unit tests verifying textbook cases, edge cases, single elements, duplicates, unreachable pathfinding, and step schema contracts).*
 
 ### C++ Tests (Native - No Emscripten SDK Required)
 
@@ -130,7 +139,7 @@ pytest tests/test_algorithms.py -v
 g++ -std=c++17 -O2 -Wall -o tests/test_algorithms tests/test_algorithms.cpp
 ./tests/test_algorithms
 ```
-*(Executes 17 native assertion checks covering algorithm outputs, sorted state invariants, and step generation).*
+*(Executes native assertion checks covering algorithm outputs, sorted state invariants, graph distance calculations, and step generation across all visualizers).*
 
 ---
 
@@ -142,6 +151,8 @@ g++ -std=c++17 -O2 -Wall -o tests/test_algorithms tests/test_algorithms.cpp
 | **Knapsack Capacity** | ≤ 50 units | Table dimension `(N+1) × (W+1)` fits cleanly without excessive scrolling |
 | **LCS String Length** | ≤ 15 characters | Ensures cell contents remain crisp on smaller viewports |
 | **Sorting Array Length** | ≤ 25 elements | Keeps bar charts readable with clear index labels |
+| **Dijkstra Grid Canvas** | 10 × 15 grid | Balances pathfinding search space with crisp cell visibility |
+| **Edit Distance Strings** | ≤ 15 characters | DP matrix `(M+1) × (N+1)` renders with full operation details |
 
 ---
 
@@ -149,16 +160,16 @@ g++ -std=c++17 -O2 -Wall -o tests/test_algorithms tests/test_algorithms.cpp
 
 ```
 algoscope/
-├── index.html              # Main application shell (sidebar, canvas, instructor terminal)
-├── style.css               # Cyberpunk design system, responsive layouts, glassmorphism
-├── main.js                 # Frontend orchestrator: validation, state machine, DOM renderers
-├── algorithms.py           # Python visualizer engine & Pyodide FFI bindings
-├── algorithms.cpp          # C++ visualizer engine & Emscripten WASM bindings
+├── index.html              # Main application shell (sidebar, canvases, controls, code viewer)
+├── style.css               # Cyberpunk design system, responsive layouts, grid styles
+├── main.js                 # Frontend orchestrator: state machine, audio synth, DOM renderers
+├── algorithms.py           # Python visualizer engine (6 algorithms) & Pyodide FFI bindings
+├── algorithms.cpp          # C++ visualizer engine (6 algorithms) & Emscripten WASM bindings
 ├── compile_wasm.sh         # WASM compilation script (macOS / Linux)
 ├── compile_wasm.bat        # WASM compilation script (Windows)
 ├── tests/
-│   ├── test_algorithms.py  # Python test suite (pytest - 18 tests)
-│   └── test_algorithms.cpp # Native C++ test runner (17 assertions)
+│   ├── test_algorithms.py  # Python test suite (22 unit tests)
+│   └── test_algorithms.cpp # Native C++ test runner (assertions across all 6 algorithms)
 └── .github/workflows/
     ├── test.yml            # CI pipeline: Runs Python & C++ tests on push/PR
     └── deploy.yml          # CD pipeline: Compiles WASM & deploys to GitHub Pages
@@ -169,3 +180,4 @@ algoscope/
 ## License
 
 MIT © 2025 [vkDemon1](https://github.com/vkDemon1)
+
