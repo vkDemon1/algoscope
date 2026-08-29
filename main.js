@@ -912,6 +912,7 @@ function renderKnapsackStep(stepData) {
 
     terminal.innerHTML = description;
     playAudioTone(200 + (currentCol * 15));
+    renderSvgDependencyArrows('ks', compareCells, currentRow, currentCol);
 }
 
 // --- 2. Longest Common Subsequence Visualizer ---
@@ -1028,6 +1029,7 @@ function renderLCSStep(stepData) {
     lcsRibbonText.innerText = lcsSequence ? `"${lcsSequence}"` : '-';
     terminal.innerHTML = description;
     playAudioTone(300 + (currentRow * 20));
+    renderSvgDependencyArrows('lcs', compareCells, currentRow, currentCol);
 }
 
 // --- 3. Quick Sort Visualizer ---
@@ -1076,6 +1078,7 @@ function initQuickSort() {
 
 function renderQuickSortStep(stepData) {
     const { array, pivotIdx, iPtr, jPtr, activeRange, swapped, sortedIndices, recursionStack, description } = stepData;
+    clearSvgArrows();
 
     qsChart.innerHTML = '';
     const maxVal = Math.max(...array, 1);
@@ -1084,13 +1087,36 @@ function renderQuickSortStep(stepData) {
         const bar = document.createElement('div');
         bar.className = 'bar';
 
-        const height = (val / maxVal) * 90 + 5;
+        const hue = Math.round(180 + (val / maxVal) * 120);
+        bar.style.setProperty('--bar-hue', hue);
+
+        const height = (val / maxVal) * 88 + 7;
         bar.style.height = `${height}%`;
         bar.innerHTML = `<span class="bar-label">${val}</span>`;
 
-        if (idx === pivotIdx) bar.classList.add('pivot');
-        if (idx === iPtr) bar.classList.add('iptr');
-        if (idx === jPtr) bar.classList.add('jptr');
+        if (idx === pivotIdx) {
+            bar.classList.add('pivot');
+            const badge = document.createElement('span');
+            badge.className = 'bar-pointer-badge badge-pivot';
+            badge.innerText = 'P';
+            bar.appendChild(badge);
+        }
+        if (idx === iPtr) {
+            bar.classList.add('iptr');
+            const badge = document.createElement('span');
+            badge.className = 'bar-pointer-badge badge-iptr';
+            badge.innerText = 'i';
+            bar.appendChild(badge);
+        }
+        if (idx === jPtr) {
+            bar.classList.add('jptr');
+            if (jPtr !== iPtr && jPtr !== pivotIdx) {
+                const badge = document.createElement('span');
+                badge.className = 'bar-pointer-badge badge-jptr';
+                badge.innerText = 'j';
+                bar.appendChild(badge);
+            }
+        }
         if (swapped.includes(idx)) bar.classList.add('swapped');
         if (sortedIndices.includes(idx)) bar.classList.add('sorted');
         if (activeRange[0] !== -1 && (idx < activeRange[0] || idx > activeRange[1])) bar.classList.add('inactive');
