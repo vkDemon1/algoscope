@@ -81,6 +81,11 @@ const hamburgerBtn = document.getElementById('hamburger-btn');
 const sidebarEl = document.getElementById('sidebar');
 const sidebarBackdrop = document.getElementById('sidebar-backdrop');
 
+const dpArrowsOverlay = document.getElementById('dp-arrows-overlay');
+const canvasCard = document.querySelector('.canvas-card');
+const canvasTooltip = document.getElementById('canvas-tooltip');
+
+
 // --- Code Snippet Repository for Live Synchronized Highlight Viewer ---
 const CODE_SNIPPETS = {
     knapsack: {
