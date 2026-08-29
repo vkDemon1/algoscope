@@ -1185,6 +1185,7 @@ function initMergeSort() {
 
 function renderMergeSortStep(stepData) {
     const { array, tempArray, activeRange, sortedIndices, recursionStack, description } = stepData;
+    clearSvgArrows();
 
     msChartMain.innerHTML = '';
     msChartHelper.innerHTML = '';
@@ -1195,7 +1196,10 @@ function renderMergeSortStep(stepData) {
         const bar = document.createElement('div');
         bar.className = 'bar';
 
-        const height = (val / maxVal) * 90 + 5;
+        const hue = Math.round(180 + (val / maxVal) * 120);
+        bar.style.setProperty('--bar-hue', hue);
+
+        const height = (val / maxVal) * 88 + 7;
         bar.style.height = `${height}%`;
         bar.innerHTML = `<span class="bar-label">${val}</span>`;
 
@@ -1223,7 +1227,9 @@ function renderMergeSortStep(stepData) {
         } else {
             const bar = document.createElement('div');
             bar.className = 'bar merging';
-            const height = (val / maxVal) * 90 + 5;
+            const hue = Math.round(180 + (val / maxVal) * 120);
+            bar.style.setProperty('--bar-hue', hue);
+            const height = (val / maxVal) * 88 + 7;
             bar.style.height = `${height}%`;
             bar.innerHTML = `<span class="bar-label">${val}</span>`;
             placeholder.appendChild(bar);
