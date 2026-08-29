@@ -289,6 +289,180 @@ if (btnAudioToggle) {
     });
 }
 
+// --- Dynamic SVG Dependency Flow Arrows (DP Visualizers) ---
+let lastArrowData = null;
+
+function clearSvgArrows() {
+    lastArrowData = null;
+    if (!dpArrowsOverlay) return;
+    const arrows = dpArrowsOverlay.querySelectorAll('.dp-dep-arrow');
+    arrows.forEach(a => a.remove());
+}
+
+function renderSvgDependencyArrows(prefix, compareCells, targetRow, targetCol) {
+    clearSvgArrows();
+    if (!dpArrowsOverlay || !canvasCard || !compareCells || compareCells.length === 0 || targetRow <= 0 || targetCol < 0) {
+        return;
+    }
+
+    lastArrowData = { prefix, compareCells, targetRow, targetCol };
+
+    const targetEl = document.getElementById(`${prefix}-cell-${targetRow}-${targetCol}`);
+    if (!targetEl) return;
+
+    const cardRect = canvasCard.getBoundingClientRect();
+    const targetRect = targetEl.getBoundingClientRect();
+
+    if (targetRect.width === 0 || targetRect.height === 0) return;
+
+    const tx = targetRect.left + targetRect.width / 2 - cardRect.left;
+    const ty = targetRect.top + targetRect.height / 2 - cardRect.top;
+
+    compareCells.forEach(([sr, sc], idx) => {
+        const sourceEl = document.getElementById(`${prefix}-cell-${sr}-${sc}`);
+        if (!sourceEl) return;
+
+        const sourceRect = sourceEl.getBoundingClientRect();
+        if (sourceRect.width === 0 || sourceRect.height === 0) return;
+
+        const sx = sourceRect.left + sourceRect.width / 2 - cardRect.left;
+        const sy = sourceRect.top + sourceRect.height / 2 - cardRect.top;
+
+        if (Math.abs(sx - tx) < 4 && Math.abs(sy - ty) < 4) return;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const isBranchIncluded = idx === 1;
+        path.setAttribute('class', `dp-dep-arrow ${isBranchIncluded ? 'branch-included' : ''}`);
+        path.setAttribute('marker-end', isBranchIncluded ? 'url(#arrowhead-cyan)' : 'url(#arrowhead)');
+
+        const dx = tx - sx;
+        const dy = ty - sy;
+        const cx1 = sx + dx * 0.15;
+        const cy1 = sy + dy * 0.7;
+        const cx2 = sx + dx * 0.75;
+        const cy2 = ty - (dy > 0 ? 5 : -5);
+
+        path.setAttribute('d', `M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${tx} ${ty}`);
+        dpArrowsOverlay.appendChild(path);
+    });
+}
+
+function triggerArrowRedraw() {
+    if (lastArrowData) {
+        renderSvgDependencyArrows(lastArrowData.prefix, lastArrowData.compareCells, lastArrowData.targetRow, lastArrowData.targetCol);
+    }
+}
+
+window.addEventListener('resize', triggerArrowRedraw);
+document.querySelectorAll('.dp-table-scroll').forEach(scroller => {
+    scroller.addEventListener('scroll', triggerArrowRedraw, { passive: true });
+});
+
+// --- Glassmorphic Floating Inspection Tooltip ---
+function initCanvasTooltips() {
+    if (!canvasTooltip) return;
+
+    document.addEventListener('mousemove', (e) => {
+        if (!canvasTooltip.classList.contains('active')) return;
+        canvasTooltip.style.left = `${e.clientX}px`;
+        canvasTooltip.style.top = `${e.clientY}px`;
+    });
+
+    document.addEventListener('mouseover', (e) => {
+        const target = e.target;
+        
+        // 1. Hovering a DP Grid Cell
+        const gridCell = target.closest('.grid-cell');
+        if (gridCell && gridCell.id) {
+            const parts = gridCell.id.split('-');
+            if (parts.length >= 4) {
+                const prefix = parts[0];
+                const r = parseInt(parts[2]);
+                const c = parseInt(parts[3]);
+                const val = gridCell.innerText.trim();
+
+                let algoTitle = prefix === 'ks' ? '0/1 Knapsack DP' : (prefix === 'lcs' ? 'LCS Alignment DP' : 'Edit Distance DP');
+                let cellRole = 'Computed Sub-problem';
+                if (gridCell.classList.contains('calculating')) cellRole = 'Active Evaluation';
+                else if (gridCell.classList.contains('comparing')) cellRole = 'Candidate Source Cell';
+                else if (gridCell.classList.contains('backtrack')) cellRole = 'Optimal Backtrack Solution';
+
+                canvasTooltip.innerHTML = `
+                    <div class="tt-title"><span>⊞</span> ${algoTitle}</div>
+                    <div class="tt-detail">Cell Coordinate: <b class="tt-val">dp[${r}][${c}]</b></div>
+                    <div class="tt-detail">Stored Value: <b class="tt-val">${val}</b></div>
+                    <div class="tt-tag" style="background: rgba(0,229,255,0.15); color: var(--accent-cyan);">${cellRole}</div>
+                `;
+                canvasTooltip.classList.add('active');
+                canvasTooltip.style.left = `${e.clientX}px`;
+                canvasTooltip.style.top = `${e.clientY}px`;
+                return;
+            }
+        }
+
+        // 2. Hovering a Sorting Bar
+        const bar = target.closest('.bar');
+        if (bar && bar.parentElement) {
+            const val = bar.querySelector('.bar-label') ? bar.querySelector('.bar-label').innerText : '';
+            const allBars = Array.from(bar.parentElement.querySelectorAll('.bar'));
+            const idx = allBars.indexOf(bar);
+
+            let status = 'Unsorted Element';
+            if (bar.classList.contains('pivot')) status = 'Partition Pivot';
+            else if (bar.classList.contains('iptr')) status = 'Left Pointer (i)';
+            else if (bar.classList.contains('jptr')) status = 'Scanning Pointer (j)';
+            else if (bar.classList.contains('swapped')) status = 'Swapping Elements';
+            else if (bar.classList.contains('sorted')) status = 'Sorted In-Place';
+
+            canvasTooltip.innerHTML = `
+                <div class="tt-title"><span>📊</span> Array Bar [Index ${idx}]</div>
+                <div class="tt-detail">Element Value: <b class="tt-val">${val}</b></div>
+                <div class="tt-tag" style="background: rgba(255,193,7,0.15); color: var(--accent-yellow);">${status}</div>
+            `;
+            canvasTooltip.classList.add('active');
+            canvasTooltip.style.left = `${e.clientX}px`;
+            canvasTooltip.style.top = `${e.clientY}px`;
+            return;
+        }
+
+        // 3. Hovering a Dijkstra Grid Cell
+        const dCell = target.closest('.d-cell');
+        if (dCell && dCell.dataset.r !== undefined) {
+            const r = dCell.dataset.r;
+            const c = dCell.dataset.c;
+            const dist = dCell.innerText.trim();
+
+            let role = 'Unexplored Empty Cell';
+            if (dCell.classList.contains('cell-start')) role = 'Start Source Node (0, 0)';
+            else if (dCell.classList.contains('cell-target')) role = 'Target Destination Node';
+            else if (dCell.classList.contains('cell-wall')) role = 'Impassable Obstacle Wall';
+            else if (dCell.classList.contains('cell-path')) role = 'Optimal Shortest Path Trail';
+            else if (dCell.classList.contains('cell-curr')) role = 'Currently Expanding (PQ Min)';
+            else if (dCell.classList.contains('cell-visited')) role = 'Settled Visited Node';
+
+            canvasTooltip.innerHTML = `
+                <div class="tt-title"><span>🧭</span> Dijkstra Grid Node (${r}, ${c})</div>
+                <div class="tt-detail">Tentative Distance: <b class="tt-val">${dist}</b></div>
+                <div class="tt-tag" style="background: rgba(0,230,118,0.15); color: var(--accent-green);">${role}</div>
+            `;
+            canvasTooltip.classList.add('active');
+            canvasTooltip.style.left = `${e.clientX}px`;
+            canvasTooltip.style.top = `${e.clientY}px`;
+            return;
+        }
+
+        // Outside interactive areas
+        canvasTooltip.classList.remove('active');
+    });
+
+    document.addEventListener('mouseleave', () => {
+        canvasTooltip.classList.remove('active');
+    });
+}
+
+initCanvasTooltips();
+
+
 // --- PyScript Lifecycle Bindings ---
 window.onPythonLoaded = function() {
     if (state.isPythonLoaded) return;
