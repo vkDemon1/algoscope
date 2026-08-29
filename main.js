@@ -1362,6 +1362,7 @@ function toggleGridWall(r, c) {
 function renderDijkstraStep(stepData) {
     const { grid, distances, visited, currentNode, path, description } = stepData;
     const { start, target, rows, cols } = state.dijkstra;
+    clearSvgArrows();
 
     let visitedCount = 0;
     for (let r = 0; r < rows; ++r) {
@@ -1505,6 +1506,7 @@ function renderEditDistanceStep(stepData) {
     edRibbonText.innerText = operations && operations.length > 0 ? operations.join(' ➔ ') : '-';
     terminal.innerHTML = description;
     playAudioTone(280 + (currentRow * 25));
+    renderSvgDependencyArrows('ed', compareCells, currentRow, currentCol);
 }
 
 // --- Helper Functions & Universal Render Step ---
