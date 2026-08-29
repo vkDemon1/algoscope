@@ -99,6 +99,17 @@
                 
                 <!-- Visual Canvas Card -->
                 <div class="card canvas-card">
+                    <!-- SVG Dynamic Dependency Flow Arrows Overlay -->
+                    <svg id="dp-arrows-overlay" class="dp-arrows-overlay" aria-hidden="true">
+                        <defs>
+                            <marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="var(--accent-yellow)" />
+                            </marker>
+                            <marker id="arrowhead-cyan" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="var(--accent-cyan)" />
+                            </marker>
+                        </defs>
+                    </svg>
                     
                     <!-- 1. Knapsack View -->
                     <div id="view-knapsack" class="viz-view active">
@@ -392,6 +403,9 @@
             </div>
         </main>
     </div>
+
+    <!-- Floating Glassmorphic Inspection Tooltip -->
+    <div id="canvas-tooltip" class="canvas-tooltip" aria-hidden="true"></div>
 
     <!-- Python Script Hook -->
     <script type="py" src="algorithms.py"></script>
