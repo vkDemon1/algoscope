@@ -1342,4 +1342,104 @@ input[type="range"] {
     box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
 }
 
+/* ==========================================
+ * SVG DYNAMIC DEPENDENCY FLOW ARROWS
+ * ========================================== */
+.dp-arrows-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+    overflow: visible;
+}
+
+.dp-dep-arrow {
+    fill: none;
+    stroke: var(--accent-yellow);
+    stroke-width: 2.5px;
+    stroke-linecap: round;
+    stroke-dasharray: 6 3;
+    animation: flow-dash 0.8s linear infinite;
+    filter: drop-shadow(0 0 6px rgba(255, 193, 7, 0.75));
+    opacity: 0.92;
+    transition: opacity 0.2s ease;
+}
+
+.dp-dep-arrow.branch-included {
+    stroke: var(--accent-cyan);
+    filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.75));
+}
+
+@keyframes flow-dash {
+    to {
+        stroke-dashoffset: -18;
+    }
+}
+
+/* ==========================================
+ * GLASSMORPHIC FLOATING INSPECTION TOOLTIP
+ * ========================================== */
+.canvas-tooltip {
+    position: fixed;
+    pointer-events: none;
+    z-index: 99999;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(13, 16, 28, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 229, 255, 0.2);
+    color: var(--text-main);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    max-width: 280px;
+    opacity: 0;
+    transform: translate(-50%, -115%) scale(0.92);
+    transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.canvas-tooltip.active {
+    opacity: 1;
+    transform: translate(-50%, -125%) scale(1);
+}
+
+.canvas-tooltip .tt-title {
+    font-weight: 700;
+    color: var(--accent-cyan);
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.canvas-tooltip .tt-detail {
+    color: var(--text-muted);
+    font-size: 0.74rem;
+}
+
+.canvas-tooltip .tt-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    width: fit-content;
+}
+
+.canvas-tooltip .tt-val {
+    color: #fff;
+    font-weight: 600;
+    font-family: 'Fira Code', monospace;
+}
+
+
 
