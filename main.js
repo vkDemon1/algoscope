@@ -589,6 +589,7 @@ navEditDistance.addEventListener('click', () => switchTab('editdistance'));
 
 function switchTab(tab) {
     closeMobileSidebar();
+    clearSvgArrows();
     if (state.activeTab === tab) return;
     pause();
     state.activeTab = tab;
