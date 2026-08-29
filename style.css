@@ -1057,18 +1057,56 @@ input[type="range"] {
     transform: scale(1.08);
 }
 
+@keyframes dijkstra-ripple {
+    0% {
+        transform: scale(0.35);
+        background-color: rgba(0, 229, 255, 0.95);
+        box-shadow: 0 0 16px var(--accent-cyan);
+        border-radius: 50%;
+    }
+    60% {
+        transform: scale(1.18);
+        background-color: rgba(0, 229, 255, 0.4);
+    }
+    100% {
+        transform: scale(1);
+        background-color: rgba(0, 229, 255, 0.25);
+        border-radius: 4px;
+    }
+}
+
+@keyframes beacon-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.8); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 230, 118, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+}
+
+@keyframes target-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.8); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 51, 102, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); }
+}
+
+@keyframes path-flow {
+    0% { transform: scale(0.7); background-color: #ff9100; box-shadow: 0 0 10px #ff9100; }
+    50% { transform: scale(1.15); background-color: #ffea00; box-shadow: 0 0 20px #ffea00; }
+    100% { transform: scale(1); background-color: #ffd600; box-shadow: 0 0 12px #ffd600; }
+}
+
 .d-cell.cell-start {
     background: var(--accent-green) !important;
     color: #000;
     font-weight: bold;
-    box-shadow: 0 0 8px var(--accent-green);
+    animation: beacon-pulse 2s infinite;
+    z-index: 3;
 }
 
 .d-cell.cell-target {
     background: var(--accent-pink) !important;
     color: #fff;
     font-weight: bold;
-    box-shadow: 0 0 8px var(--accent-pink);
+    animation: target-pulse 2s infinite;
+    z-index: 3;
 }
 
 .d-cell.cell-wall {
@@ -1081,21 +1119,24 @@ input[type="range"] {
     background: rgba(0, 229, 255, 0.25) !important;
     border-color: var(--accent-cyan) !important;
     color: #fff;
+    animation: dijkstra-ripple 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .d-cell.cell-curr {
     background: var(--accent-yellow) !important;
     color: #000;
     font-weight: bold;
-    box-shadow: 0 0 12px var(--accent-yellow);
+    box-shadow: 0 0 14px var(--accent-yellow);
     animation: zoom-in 0.2s ease;
+    z-index: 4;
 }
 
 .d-cell.cell-path {
-    background: #ffea00 !important;
+    background: #ffd600 !important;
     color: #000;
     font-weight: bold;
-    box-shadow: 0 0 10px #ffea00;
+    animation: path-flow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    z-index: 5;
 }
 
 /* ==========================================
