@@ -1035,6 +1035,8 @@ function switchTab(tab) {
         if (activeEngineReady()) initEditDistance();
     }
 
+    renderPresetPills();
+    updateTheoryHUD(null);
     updateCodeViewer();
 }
 
@@ -1951,6 +1953,9 @@ function renderStep(idx) {
 
     // Update Synchronized Code Line Highlight
     updateCodeViewer(stepData.codeLine || 1);
+
+    // Update Theory & Recurrence HUD
+    updateTheoryHUD(stepData);
 
     // Update Metrics
     updateMetrics(stepData);
