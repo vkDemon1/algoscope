@@ -267,6 +267,395 @@ const CODE_SNIPPETS = {
     }
 };
 
+// --- Curated Scenario Presets Catalog ---
+const ALGO_PRESETS = {
+    knapsack: [
+        {
+            name: "Textbook Standard",
+            tag: "Classic",
+            params: { weights: "2, 3, 4, 5", values: "3, 4, 5, 8", capacity: 8 }
+        },
+        {
+            name: "High-Value Heist",
+            tag: "Greedy Trap",
+            params: { weights: "3, 7, 10, 12", values: "12, 40, 60, 90", capacity: 15 }
+        },
+        {
+            name: "Micro Budgeting",
+            tag: "Sub-units",
+            params: { weights: "1, 1, 2, 3, 4", values: "2, 3, 5, 7, 9", capacity: 6 }
+        },
+        {
+            name: "Equal Weights",
+            tag: "Tiebreaker",
+            params: { weights: "3, 3, 3, 3", values: "4, 6, 8, 10", capacity: 6 }
+        }
+    ],
+    lcs: [
+        {
+            name: "Textbook Case",
+            tag: "Standard",
+            params: { s1: "BDCABA", s2: "ABCBDAB" }
+        },
+        {
+            name: "DNA Alignment",
+            tag: "Bioinformatics",
+            params: { s1: "AGTCGAT", s2: "ACGTCAT" }
+        },
+        {
+            name: "Prefix & Suffix",
+            tag: "Affix Overlap",
+            params: { s1: "ALGORITHM", s2: "ALGEBRA" }
+        },
+        {
+            name: "Zero Intersection",
+            tag: "Disjoint",
+            params: { s1: "APPLE", s2: "ZEBRA" }
+        }
+    ],
+    quicksort: [
+        {
+            name: "Nearly Sorted",
+            tag: "Best Case",
+            params: { arr: "5, 8, 12, 14, 15, 20, 24, 25", size: 8 }
+        },
+        {
+            name: "Reverse Sorted",
+            tag: "Worst Case (O(N²))",
+            params: { arr: "45, 38, 30, 25, 18, 12, 7, 2", size: 8 }
+        },
+        {
+            name: "Dutch Flag",
+            tag: "Duplicates",
+            params: { arr: "10, 25, 10, 50, 25, 50, 10, 25", size: 8 }
+        },
+        {
+            name: "Random Scatter",
+            tag: "Average Case",
+            params: { arr: "24, 9, 32, 15, 8, 41, 18, 5", size: 8 }
+        }
+    ],
+    mergesort: [
+        {
+            name: "Sawtooth Wave",
+            tag: "Interleaved",
+            params: { arr: "10, 40, 15, 45, 20, 50, 25, 55", size: 8 }
+        },
+        {
+            name: "Nearly Sorted",
+            tag: "Linear Split",
+            params: { arr: "4, 9, 15, 18, 22, 26, 28, 35", size: 8 }
+        },
+        {
+            name: "Inverted Pyramid",
+            tag: "High Split",
+            params: { arr: "50, 30, 10, 5, 12, 32, 52", size: 7 }
+        },
+        {
+            name: "Alternating Bounds",
+            tag: "Bimodal",
+            params: { arr: "5, 55, 10, 50, 15, 45, 20, 40", size: 8 }
+        }
+    ],
+    dijkstra: [
+        {
+            name: "Spiral Labyrinth",
+            tag: "Winding Maze",
+            setup: () => {
+                const grid = Array.from({ length: 10 }, () => Array(15).fill(0));
+                for (let c = 2; c < 13; ++c) { grid[2][c] = 1; grid[7][c] = 1; }
+                for (let r = 2; r <= 5; ++r) grid[r][12] = 1;
+                for (let r = 4; r <= 7; ++r) grid[r][2] = 1;
+                for (let c = 4; c <= 10; ++c) grid[4][c] = 1;
+                return { grid, start: [0, 0], target: [5, 6] };
+            }
+        },
+        {
+            name: "Chokepoint Bridge",
+            tag: "Bottleneck",
+            setup: () => {
+                const grid = Array.from({ length: 10 }, () => Array(15).fill(0));
+                for (let r = 0; r < 10; ++r) if (r !== 5) grid[r][7] = 1;
+                return { grid, start: [2, 1], target: [8, 13] };
+            }
+        },
+        {
+            name: "Obstacle Islands",
+            tag: "Clusters",
+            setup: () => {
+                const grid = Array.from({ length: 10 }, () => Array(15).fill(0));
+                [[2, 3], [2, 4], [3, 3], [3, 4], [6, 8], [6, 9], [7, 8], [7, 9], [2, 10], [3, 10], [6, 4], [7, 4]].forEach(([r, c]) => {
+                    grid[r][c] = 1;
+                });
+                return { grid, start: [0, 0], target: [9, 14] };
+            }
+        },
+        {
+            name: "Open Field",
+            tag: "Radial Wave",
+            setup: () => {
+                const grid = Array.from({ length: 10 }, () => Array(15).fill(0));
+                return { grid, start: [4, 7], target: [0, 0] };
+            }
+        }
+    ],
+    editdistance: [
+        {
+            name: "Textbook Case",
+            tag: "Classic (3 ops)",
+            params: { s1: "kitten", s2: "sitting" }
+        },
+        {
+            name: "Typo Correction",
+            tag: "Spelling (2 ops)",
+            params: { s1: "receive", s2: "recieve" }
+        },
+        {
+            name: "DNA Mutation",
+            tag: "Bio Alignment",
+            params: { s1: "GATTACA", s2: "GCATGCU" }
+        },
+        {
+            name: "Identity Match",
+            tag: "Cost 0",
+            params: { s1: "ALGORITHM", s2: "ALGORITHM" }
+        }
+    ]
+};
+
+// --- Complexity & Mathematical Invariant Metadata ---
+const ALGO_THEORY = {
+    knapsack: {
+        name: "0/1 Knapsack DP",
+        category: "Dynamic Programming",
+        timeAvg: "O(N · W)",
+        timeWorst: "O(N · W)",
+        space: "O(N · W)",
+        strategy: "Bottom-Up Table",
+        branches: [
+            { id: "base", text: "• Base Cases: dp[0][w] = 0 (no items), dp[i][0] = 0 (0 capacity)" },
+            { id: "include", text: "• Include Item i: dp[i][w] = max(dp[i-1][w], v[i] + dp[i-1][w - w[i]])" },
+            { id: "exclude", text: "• Exclude Item i: dp[i][w] = dp[i-1][w]  (when w[i] > capacity w)" },
+            { id: "backtrack", text: "• Backtrack: if dp[i][w] != dp[i-1][w] ➔ select item i, w -= w[i]" }
+        ],
+        getBranch: (stepData) => {
+            if (!stepData) return 0;
+            if (stepData.stage === 'initialization') return 0;
+            if (stepData.stage === 'calculation') {
+                return (stepData.compareCells && stepData.compareCells.length > 1) ? 1 : 2;
+            }
+            if (stepData.stage && (stepData.stage.startsWith('backtrack') || stepData.stage === 'complete')) return 3;
+            return 0;
+        }
+    },
+    lcs: {
+        name: "LCS Alignment DP",
+        category: "Dynamic Programming",
+        timeAvg: "O(M · N)",
+        timeWorst: "O(M · N)",
+        space: "O(M · N)",
+        strategy: "Prefix Alignment",
+        branches: [
+            { id: "base", text: "• Base Cases: dp[0][j] = 0, dp[i][0] = 0 (empty string matches)" },
+            { id: "match", text: "• Match: dp[i][j] = 1 + dp[i-1][j-1]  (when s1[j-1] == s2[i-1])" },
+            { id: "mismatch", text: "• Mismatch: dp[i][j] = max(dp[i-1][j], dp[i][j-1])" },
+            { id: "backtrack", text: "• Backtrack: move diagonally if matched, else move towards max" }
+        ],
+        getBranch: (stepData) => {
+            if (!stepData) return 0;
+            if (stepData.stage === 'initialization') return 0;
+            if (stepData.stage === 'calculation') {
+                return (stepData.compareCells && stepData.compareCells.length === 1) ? 1 : 2;
+            }
+            if (stepData.stage && (stepData.stage.startsWith('backtrack') || stepData.stage === 'complete')) return 3;
+            return 0;
+        }
+    },
+    quicksort: {
+        name: "Quick Sort (Lomuto)",
+        category: "Divide & Conquer",
+        timeAvg: "O(N log N)",
+        timeWorst: "O(N²)",
+        space: "O(log N)",
+        strategy: "In-Place Partition",
+        branches: [
+            { id: "base", text: "• Base Case: if (low >= high) return (sub-array sorted)" },
+            { id: "scan", text: "• Scan & Swap: if (arr[j] <= pivot) swap(arr[++i], arr[j])" },
+            { id: "pivot", text: "• Place Pivot: swap(arr[i+1], arr[high]), pivot fixed at p = i+1" },
+            { id: "recurse", text: "• Divide & Conquer: quicksort(low, p-1); quicksort(p+1, high)" }
+        ],
+        getBranch: (stepData) => {
+            if (!stepData) return 0;
+            if (stepData.swapped && stepData.swapped.includes(stepData.pivotIdx)) return 2;
+            if (stepData.swapped && stepData.swapped.length > 0) return 1;
+            if (stepData.activeRange && stepData.activeRange[0] !== -1) return 3;
+            return 0;
+        }
+    },
+    mergesort: {
+        name: "Merge Sort (Buffer)",
+        category: "Divide & Conquer",
+        timeAvg: "O(N log N)",
+        timeWorst: "O(N log N)",
+        space: "O(N)",
+        strategy: "Guaranteed Stable",
+        branches: [
+            { id: "base", text: "• Base Case: if (l >= r) return (single element segment)" },
+            { id: "divide", text: "• Divide Phase: m = l + (r - l)/2; split left and right halves" },
+            { id: "merge", text: "• Two-Pointer Merge: temp[k++] = min(arr[i], arr[j])" },
+            { id: "copyback", text: "• Copyback Phase: transfer merged buffer back into main array" }
+        ],
+        getBranch: (stepData) => {
+            if (!stepData) return 0;
+            if (stepData.tempArray && stepData.tempArray.some(x => x !== null)) return 2;
+            if (stepData.sortedIndices && stepData.sortedIndices.length > 0) return 3;
+            if (stepData.activeRange && stepData.activeRange[0] !== -1) return 1;
+            return 0;
+        }
+    },
+    dijkstra: {
+        name: "Dijkstra Shortest Path",
+        category: "Graph / Greedy",
+        timeAvg: "O((V + E) log V)",
+        timeWorst: "O((V + E) log V)",
+        space: "O(V + E)",
+        strategy: "Min-Priority Queue",
+        branches: [
+            { id: "init", text: "• Initialization: dist[start] = 0, push (0, start) to PQ" },
+            { id: "extract", text: "• Extract Min: (d, u) = pq.pop(), settle node u as VISITED" },
+            { id: "relax", text: "• Edge Relaxation: if (d + 1 < dist[v]) { dist[v] = d+1; pq.push() }" },
+            { id: "path", text: "• Shortest Path: backtrack from target to start using parent links" }
+        ],
+        getBranch: (stepData) => {
+            if (!stepData) return 0;
+            if (stepData.stage === 'initialization') return 0;
+            if (stepData.stage === 'exploration') return 1;
+            if (stepData.stage === 'relax_neighbor') return 2;
+            if (stepData.stage === 'complete') return 3;
+            return 0;
+        }
+    },
+    editdistance: {
+        name: "Edit Distance (Levenshtein)",
+        category: "Dynamic Programming",
+        timeAvg: "O(M · N)",
+        timeWorst: "O(M · N)",
+        space: "O(M · N)",
+        strategy: "2D Cost Minimization",
+        branches: [
+            { id: "base", text: "• Base Cases: dp[i][0] = i (deletions), dp[0][j] = j (insertions)" },
+            { id: "diag", text: "• Diagonal: cost = (s1[j-1]==s2[i-1] ? 0 : 1) + dp[i-1][j-1]" },
+            { id: "insdel", text: "• Min Edit: dp[i][j] = min(dp[i-1][j]+1, dp[i][j-1]+1, diag)" },
+            { id: "backtrack", text: "• Reconstruct: trace optimal sequence of edits (del, ins, sub)" }
+        ],
+        getBranch: (stepData) => {
+            if (!stepData) return 0;
+            if (stepData.stage === 'initialization') return 0;
+            if (stepData.stage === 'calculation') {
+                return (stepData.description && (stepData.description.includes('Match') || stepData.description.includes('Substitute'))) ? 1 : 2;
+            }
+            if (stepData.stage && (stepData.stage.startsWith('backtrack') || stepData.stage === 'complete')) return 3;
+            return 0;
+        }
+    }
+};
+
+// --- Presets & Theory HUD Functions ---
+function renderPresetPills() {
+    if (!presetPillsBar) return;
+    presetPillsBar.innerHTML = '';
+
+    const presets = ALGO_PRESETS[state.activeTab];
+    if (!presets || presets.length === 0) return;
+
+    presets.forEach((preset, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `preset-pill ${idx === 0 ? 'active' : ''}`;
+        btn.innerHTML = `<span>${preset.name}</span><span class="preset-pill-tag">${preset.tag}</span>`;
+
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.preset-pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            applyPreset(preset);
+        });
+
+        presetPillsBar.appendChild(btn);
+    });
+}
+
+function applyPreset(preset) {
+    const tab = state.activeTab;
+    if (tab === 'knapsack') {
+        const wInput = document.getElementById('input-ks-weights');
+        const vInput = document.getElementById('input-ks-values');
+        const cInput = document.getElementById('input-ks-capacity');
+        if (wInput) wInput.value = preset.params.weights;
+        if (vInput) vInput.value = preset.params.values;
+        if (cInput) cInput.value = preset.params.capacity;
+        initKnapsack();
+    } else if (tab === 'lcs') {
+        const s1In = document.getElementById('input-lcs-s1');
+        const s2In = document.getElementById('input-lcs-s2');
+        if (s1In) s1In.value = preset.params.s1;
+        if (s2In) s2In.value = preset.params.s2;
+        initLCS();
+    } else if (tab === 'quicksort') {
+        const arrIn = document.getElementById('input-qs-arr');
+        const sizeIn = document.getElementById('input-qs-size');
+        if (arrIn) arrIn.value = preset.params.arr;
+        if (sizeIn) sizeIn.value = preset.params.size;
+        initQuickSort();
+    } else if (tab === 'mergesort') {
+        const arrIn = document.getElementById('input-ms-arr');
+        const sizeIn = document.getElementById('input-ms-size');
+        if (arrIn) arrIn.value = preset.params.arr;
+        if (sizeIn) sizeIn.value = preset.params.size;
+        initMergeSort();
+    } else if (tab === 'dijkstra') {
+        if (preset.setup) {
+            const res = preset.setup();
+            state.dijkstra.grid = res.grid;
+            state.dijkstra.start = res.start;
+            state.dijkstra.target = res.target;
+            buildDijkstraGridDOM();
+            initDijkstra();
+        }
+    } else if (tab === 'editdistance') {
+        const ed1 = document.getElementById('input-ed-s1');
+        const ed2 = document.getElementById('input-ed-s2');
+        if (ed1) ed1.value = preset.params.s1;
+        if (ed2) ed2.value = preset.params.s2;
+        initEditDistance();
+    }
+}
+
+function updateTheoryHUD(stepData) {
+    const theory = ALGO_THEORY[state.activeTab];
+    if (!theory) return;
+
+    if (theoryAlgoName) theoryAlgoName.innerText = theory.name;
+    if (theoryCatBadge) theoryCatBadge.innerText = theory.category;
+    if (theoryTimeAvg) theoryTimeAvg.innerText = theory.timeAvg;
+    if (theoryTimeWorst) theoryTimeWorst.innerText = theory.timeWorst;
+    if (theorySpace) theorySpace.innerText = theory.space;
+    if (theoryStrategy) theoryStrategy.innerText = theory.strategy;
+
+    if (theoryFormula) {
+        const activeBranchIdx = theory.getBranch(stepData);
+        theoryFormula.innerHTML = theory.branches.map((b, idx) => `
+            <span class="formula-branch ${idx === activeBranchIdx ? 'active-branch' : ''}">${b.text}</span>
+        `).join('');
+    }
+
+    if (theoryOpsCounter && theoryOpsProgress) {
+        const currentOps = state.currentStepIdx + 1;
+        const totalOps = Math.max(state.totalSteps, 1);
+        theoryOpsCounter.innerText = `${currentOps} / ${totalOps} steps`;
+        const pct = Math.min(Math.round((currentOps / totalOps) * 100), 100);
+        theoryOpsProgress.style.width = `${pct}%`;
+    }
+}
+
 // --- Web Audio Synthesizer (Sound Effects) ---
 let audioCtx = null;
 function playAudioTone(freqHz) {
