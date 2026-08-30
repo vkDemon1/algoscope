@@ -85,6 +85,18 @@ const dpArrowsOverlay = document.getElementById('dp-arrows-overlay');
 const canvasCard = document.querySelector('.canvas-card');
 const canvasTooltip = document.getElementById('canvas-tooltip');
 
+const presetPillsBar = document.getElementById('preset-pills-bar');
+const theoryAlgoName = document.getElementById('theory-algo-name');
+const theoryCatBadge = document.getElementById('theory-cat-badge');
+const theoryTimeAvg = document.getElementById('theory-time-avg');
+const theoryTimeWorst = document.getElementById('theory-time-worst');
+const theorySpace = document.getElementById('theory-space');
+const theoryStrategy = document.getElementById('theory-strategy');
+const theoryFormula = document.getElementById('theory-formula');
+const theoryOpsCounter = document.getElementById('theory-ops-counter');
+const theoryOpsProgress = document.getElementById('theory-ops-progress');
+
+
 
 // --- Code Snippet Repository for Live Synchronized Highlight Viewer ---
 const CODE_SNIPPETS = {
