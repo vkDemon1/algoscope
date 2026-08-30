@@ -399,6 +399,55 @@
                     </div>
                 </div>
 
+                <!-- Theory & Complexity HUD Card -->
+                <div class="card theory-card" id="theory-card">
+                    <div class="theory-header">
+                        <div class="theory-badge-group">
+                            <span class="theory-title" id="theory-algo-name">Complexity & Invariant HUD</span>
+                            <span class="theory-cat-badge" id="theory-cat-badge">Dynamic Programming</span>
+                        </div>
+                    </div>
+                    <div class="theory-content" id="theory-content">
+                        <div class="complexity-badges-grid">
+                            <div class="comp-badge-item">
+                                <span class="comp-label">Time (Avg)</span>
+                                <span class="comp-val val-avg" id="theory-time-avg">O(N·W)</span>
+                            </div>
+                            <div class="comp-badge-item">
+                                <span class="comp-label">Time (Worst)</span>
+                                <span class="comp-val val-worst" id="theory-time-worst">O(N·W)</span>
+                            </div>
+                            <div class="comp-badge-item">
+                                <span class="comp-label">Space (Aux)</span>
+                                <span class="comp-val val-space" id="theory-space">O(N·W)</span>
+                            </div>
+                            <div class="comp-badge-item">
+                                <span class="comp-label">Strategy</span>
+                                <span class="comp-val val-strategy" id="theory-strategy">Bottom-Up DP</span>
+                            </div>
+                        </div>
+
+                        <!-- Live Recurrence Relation / Core Invariant -->
+                        <div class="recurrence-box">
+                            <div class="recurrence-label">Live Mathematical Recurrence / Invariant:</div>
+                            <div class="recurrence-formula" id="theory-formula">
+                                <!-- Dynamic formula branches rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Theoretical Efficiency Ratio Gauge -->
+                        <div class="efficiency-gauge-container">
+                            <div class="efficiency-labels">
+                                <span>Operations vs Theoretical Upper Bound:</span>
+                                <span id="theory-ops-counter">0 / ~0 bound</span>
+                            </div>
+                            <div class="efficiency-progress-track">
+                                <div class="efficiency-progress-bar" id="theory-ops-progress" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Synchronized Code Viewer Card -->
                 <div class="card code-card">
                     <div class="code-header">
