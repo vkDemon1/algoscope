@@ -871,6 +871,8 @@ window.onPythonLoaded = function() {
     badge.innerHTML = '<span>Engine Ready</span>';
     badge.className = 'loading-badge ready';
     console.log("JavaScript: PyScript Engine loaded successfully!");
+    renderPresetPills();
+    updateTheoryHUD(null);
     initKnapsack();
     updateCodeViewer();
 };
@@ -878,6 +880,8 @@ window.onPythonLoaded = function() {
 if (window.createKnapsackVisualizer) {
     window.onPythonLoaded();
 } else {
+    renderPresetPills();
+    updateTheoryHUD(null);
     updateCodeViewer();
 }
 
