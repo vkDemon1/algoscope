@@ -1742,5 +1742,36 @@ input[type="range"] {
     font-family: 'Fira Code', monospace;
 }
 
+/* ==========================================
+ * TOAST NOTIFICATION STYLING
+ * ========================================== */
+.toast-notification {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 10px 18px;
+    background: rgba(14, 18, 32, 0.95);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--accent-green);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 230, 118, 0.25);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 8px;
+    z-index: 999999;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 
 
