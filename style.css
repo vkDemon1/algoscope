@@ -1245,9 +1245,9 @@ input[type="range"] {
 .scrubber-container {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     flex: 1;
-    min-width: 240px;
+    min-width: 260px;
 }
 
 .scrubber-label {
@@ -1256,10 +1256,74 @@ input[type="range"] {
     white-space: nowrap;
 }
 
-#timeline-scrubber {
+.scrubber-track-wrapper {
+    position: relative;
     flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+#timeline-scrubber {
+    width: 100%;
     accent-color: var(--accent-cyan);
     cursor: pointer;
+    z-index: 2;
+}
+
+.timeline-milestones {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    height: 14px;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.milestone-pin {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-yellow);
+    border: 2px solid #0a0c16;
+    box-shadow: 0 0 6px var(--accent-yellow);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.milestone-pin:hover {
+    transform: translate(-50%, -50%) scale(1.6);
+    background: #fff;
+    box-shadow: 0 0 12px var(--accent-yellow);
+    z-index: 10;
+}
+
+.milestone-pin.active {
+    background: var(--accent-cyan);
+    box-shadow: 0 0 10px var(--accent-cyan);
+}
+
+.audio-theme-select {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--card-border);
+    color: var(--text-main);
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.audio-theme-select:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.2);
 }
 
 .operation-metrics-bar {
