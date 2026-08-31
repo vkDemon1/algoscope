@@ -97,6 +97,12 @@ const theoryFormula = document.getElementById('theory-formula');
 const theoryOpsCounter = document.getElementById('theory-ops-counter');
 const theoryOpsProgress = document.getElementById('theory-ops-progress');
 
+const timelineMilestones = document.getElementById('timeline-milestones');
+const btnShareState = document.getElementById('btn-share-state');
+const btnExportSnapshot = document.getElementById('btn-export-snapshot');
+const audioThemeSelect = document.getElementById('audio-theme-select');
+const toastNotification = document.getElementById('toast-notification');
+
 
 
 // --- Code Snippet Repository for Live Synchronized Highlight Viewer ---
@@ -670,14 +676,41 @@ function playAudioTone(freqHz) {
         }
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freqHz, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.1);
+        const now = audioCtx.currentTime;
+
+        if (state.audioTheme === 'arcade') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freqHz * 1.2, now);
+            gain.gain.setValueAtTime(0.025, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.07);
+        } else if (state.audioTheme === 'marimba') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freqHz, now);
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1300, now);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else {
+            // Default: synthwave
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freqHz, now);
+            gain.gain.setValueAtTime(0.04, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        }
     } catch (e) {
         // AudioContext disabled by browser policy
     }
@@ -690,6 +723,402 @@ if (btnAudioToggle) {
         btnAudioToggle.title = state.audioEnabled ? 'Sound Enabled' : 'Sound Muted';
     });
 }
+
+if (audioThemeSelect) {
+    audioThemeSelect.addEventListener('change', (e) => {
+        state.audioTheme = e.target.value;
+        playAudioTone(440);
+        showToast(`🎵 Soundscape set to <b>${audioThemeSelect.options[audioThemeSelect.selectedIndex].text}</b>`);
+    });
+}
+
+// --- Toast Notifications ---
+let toastTimer = null;
+function showToast(message, durationMs = 3000) {
+    if (!toastNotification) return;
+    clearTimeout(toastTimer);
+    toastNotification.innerHTML = message;
+    toastNotification.classList.add('show');
+    toastTimer = setTimeout(() => {
+        toastNotification.classList.remove('show');
+    }, durationMs);
+}
+
+// --- Timeline Milestones Scrubber Pins ---
+function extractAndRenderMilestones() {
+    if (!timelineMilestones) return;
+    timelineMilestones.innerHTML = '';
+    if (!state.visualizer || state.totalSteps <= 1) return;
+
+    const total = state.totalSteps;
+    const candidates = [];
+
+    // Always include Step 0
+    candidates.push({ step: 0, label: 'Start / Initialization' });
+
+    let prevStage = null;
+    for (let i = 1; i < total - 1; ++i) {
+        try {
+            const raw = state.visualizer.get_step(i);
+            if (!raw) continue;
+            const data = JSON.parse(raw);
+            const stage = data.stage;
+
+            if (stage && stage !== prevStage) {
+                let label = null;
+                if (stage === 'calculation') label = 'Calculation Phase';
+                else if (stage === 'backtracking_start') label = 'Optimal Traceback';
+                else if (stage === 'exploration') label = 'PQ Exploration';
+                else if (stage === 'relax_neighbor') label = 'Relaxation';
+                
+                if (label) {
+                    candidates.push({ step: i, label });
+                }
+                prevStage = stage;
+            }
+
+            // QuickSort pivot placements
+            if (state.activeTab === 'quicksort' && data.swapped && data.swapped.includes(data.pivotIdx) && candidates.length < 5) {
+                candidates.push({ step: i, label: `Pivot Placed (Idx ${data.pivotIdx})` });
+            }
+
+            // MergeSort merge phase
+            if (state.activeTab === 'mergesort' && data.tempArray && data.tempArray.some(x => x !== null) && candidates.length < 5) {
+                if (!candidates.some(c => c.label.includes('Buffer Merge'))) {
+                    candidates.push({ step: i, label: 'Buffer Merge' });
+                }
+            }
+        } catch (e) {
+            break;
+        }
+    }
+
+    // Always include Final Step
+    candidates.push({ step: total - 1, label: 'Optimal / Complete' });
+
+    // Deduplicate milestones that are too close together
+    const unique = [];
+    candidates.forEach(c => {
+        if (!unique.some(u => Math.abs(u.step - c.step) < Math.max(1, Math.floor(total * 0.08)))) {
+            unique.push(c);
+        }
+    });
+
+    unique.forEach(m => {
+        const pct = ((m.step / (total - 1)) * 100).toFixed(1);
+        const pin = document.createElement('button');
+        pin.className = 'milestone-pin';
+        pin.dataset.step = m.step;
+        pin.style.left = `${pct}%`;
+        pin.title = `Step ${m.step + 1}: ${m.label}`;
+
+        pin.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pause();
+            renderStep(m.step);
+            showToast(`📍 Jumped to Milestone: <b>${m.label}</b> (Step ${m.step + 1})`);
+        });
+
+        timelineMilestones.appendChild(pin);
+    });
+}
+
+// --- Shareable URL State Encoding ---
+function generateShareableURL() {
+    const tab = state.activeTab;
+    const params = new URLSearchParams();
+    params.set('algo', tab);
+
+    if (tab === 'knapsack') {
+        const wInput = document.getElementById('input-ks-weights');
+        const vInput = document.getElementById('input-ks-values');
+        const cInput = document.getElementById('input-ks-capacity');
+        if (wInput) params.set('weights', wInput.value);
+        if (vInput) params.set('values', vInput.value);
+        if (cInput) params.set('cap', cInput.value);
+    } else if (tab === 'lcs') {
+        const s1 = document.getElementById('input-lcs-s1');
+        const s2 = document.getElementById('input-lcs-s2');
+        if (s1) params.set('s1', s1.value);
+        if (s2) params.set('s2', s2.value);
+    } else if (tab === 'quicksort') {
+        const arr = document.getElementById('input-qs-arr');
+        if (arr) params.set('arr', arr.value);
+    } else if (tab === 'mergesort') {
+        const arr = document.getElementById('input-ms-arr');
+        if (arr) params.set('arr', arr.value);
+    } else if (tab === 'dijkstra') {
+        const { start, target, grid } = state.dijkstra;
+        params.set('start', `${start[0]},${start[1]}`);
+        params.set('target', `${target[0]},${target[1]}`);
+        const walls = [];
+        grid.forEach((row, r) => {
+            row.forEach((v, c) => {
+                if (v === 1) walls.push(`${r}_${c}`);
+            });
+        });
+        if (walls.length > 0) params.set('walls', walls.join('-'));
+    } else if (tab === 'editdistance') {
+        const s1 = document.getElementById('input-ed-s1');
+        const s2 = document.getElementById('input-ed-s2');
+        if (s1) params.set('s1', s1.value);
+        if (s2) params.set('s2', s2.value);
+    }
+
+    const shareUrl = `${window.location.origin}${window.location.pathname}#${params.toString()}`;
+    window.location.hash = params.toString();
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            showToast('🔗 <b>Shareable URL copied to clipboard!</b>');
+        }).catch(() => {
+            showToast('🔗 URL updated in address bar!');
+        });
+    } else {
+        showToast('🔗 URL updated in address bar!');
+    }
+}
+
+function loadStateFromURL() {
+    if (!window.location.hash) return false;
+    try {
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const algo = params.get('algo');
+        if (!algo) return false;
+
+        const validTabs = ['knapsack', 'lcs', 'quicksort', 'mergesort', 'dijkstra', 'editdistance'];
+        if (!validTabs.includes(algo)) return false;
+
+        switchTab(algo);
+
+        if (algo === 'knapsack') {
+            if (params.get('weights')) document.getElementById('input-ks-weights').value = params.get('weights');
+            if (params.get('values')) document.getElementById('input-ks-values').value = params.get('values');
+            if (params.get('cap')) document.getElementById('input-ks-capacity').value = params.get('cap');
+            initKnapsack();
+        } else if (algo === 'lcs') {
+            if (params.get('s1')) document.getElementById('input-lcs-s1').value = params.get('s1');
+            if (params.get('s2')) document.getElementById('input-lcs-s2').value = params.get('s2');
+            initLCS();
+        } else if (algo === 'quicksort') {
+            if (params.get('arr')) document.getElementById('input-qs-arr').value = params.get('arr');
+            initQuickSort();
+        } else if (algo === 'mergesort') {
+            if (params.get('arr')) document.getElementById('input-ms-arr').value = params.get('arr');
+            initMergeSort();
+        } else if (algo === 'dijkstra') {
+            if (params.get('start')) {
+                const parts = params.get('start').split(',').map(Number);
+                if (parts.length === 2) state.dijkstra.start = parts;
+            }
+            if (params.get('target')) {
+                const parts = params.get('target').split(',').map(Number);
+                if (parts.length === 2) state.dijkstra.target = parts;
+            }
+            if (params.get('walls')) {
+                const grid = Array.from({ length: 10 }, () => Array(15).fill(0));
+                params.get('walls').split('-').forEach(pair => {
+                    const [r, c] = pair.split('_').map(Number);
+                    if (r >= 0 && r < 10 && c >= 0 && c < 15) grid[r][c] = 1;
+                });
+                state.dijkstra.grid = grid;
+            }
+            buildDijkstraGridDOM();
+            initDijkstra();
+        } else if (algo === 'editdistance') {
+            if (params.get('s1')) document.getElementById('input-ed-s1').value = params.get('s1');
+            if (params.get('s2')) document.getElementById('input-ed-s2').value = params.get('s2');
+            initEditDistance();
+        }
+
+        showToast(`⚡ <b>Loaded instance from shared link (${algo})</b>`);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+// --- Canvas Snapshot Image Export ---
+function exportCanvasSnapshot() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 760;
+    const ctx = canvas.getContext('2d');
+
+    // Background Cyber Gradient
+    const bgGrad = ctx.createRadialGradient(600, 380, 50, 600, 380, 700);
+    bgGrad.addColorStop(0, '#0f1424');
+    bgGrad.addColorStop(1, '#05070c');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 1200, 760);
+
+    // Outer Glow Card
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(30, 30, 1140, 700);
+
+    // Neon Brand Header
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = 'bold 28px "Outfit", sans-serif';
+    ctx.fillText('ALGOSCOPE', 55, 75);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px "Outfit", sans-serif';
+    ctx.fillText('Interactive Algorithmic Execution Visualizer & Computer Science Lab', 230, 74);
+
+    // Algorithm & Step Info
+    const algoName = ALGO_THEORY[state.activeTab] ? ALGO_THEORY[state.activeTab].name : state.activeTab.toUpperCase();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px "Outfit", sans-serif';
+    ctx.fillText(algoName, 55, 120);
+
+    ctx.fillStyle = '#ffd600';
+    ctx.font = '15px "Fira Code", monospace';
+    ctx.fillText(`Step ${state.currentStepIdx + 1} of ${state.totalSteps} | Engine: ${state.engine.toUpperCase()}`, 55, 145);
+
+    // Inner Canvas Visualization Window
+    ctx.fillStyle = '#070913';
+    ctx.fillRect(55, 170, 1090, 480);
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(55, 170, 1090, 480);
+
+    const tab = state.activeTab;
+
+    if (tab === 'quicksort' || tab === 'mergesort') {
+        const container = tab === 'quicksort' ? qsChart : msChartMain;
+        const bars = container ? container.querySelectorAll('.bar') : [];
+        if (bars.length > 0) {
+            const barW = Math.min(60, (960 / bars.length) - 12);
+            const startX = 55 + (1090 - (bars.length * (barW + 12))) / 2;
+            bars.forEach((bar, i) => {
+                const hPct = parseFloat(bar.style.height) || 50;
+                const hPx = (hPct / 100) * 360;
+                const x = startX + i * (barW + 12);
+                const y = 620 - hPx;
+
+                const isPivot = bar.classList.contains('pivot');
+                const isSwapped = bar.classList.contains('swapped');
+                const isSorted = bar.classList.contains('sorted');
+
+                if (isPivot) ctx.fillStyle = '#ff007f';
+                else if (isSwapped) ctx.fillStyle = '#ffd600';
+                else if (isSorted) ctx.fillStyle = '#00e676';
+                else ctx.fillStyle = '#9d4edd';
+
+                ctx.fillRect(x, y, barW, hPx);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px "Fira Code", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(bar.innerText.trim(), x + barW / 2, y - 8);
+                ctx.fillStyle = '#64748b';
+                ctx.font = '12px "Fira Code", monospace';
+                ctx.fillText(`[${i}]`, x + barW / 2, 640);
+            });
+            ctx.textAlign = 'left';
+        }
+    } else if (tab === 'dijkstra') {
+        const cellW = 55;
+        const cellH = 36;
+        const startX = 55 + (1090 - (15 * cellW)) / 2;
+        const startY = 190;
+
+        for (let r = 0; r < 10; ++r) {
+            for (let c = 0; c < 15; ++c) {
+                const cell = document.getElementById(`d-cell-${r}-${c}`);
+                const x = startX + c * cellW;
+                const y = startY + r * cellH;
+
+                let fill = '#0a0d1a';
+                if (cell) {
+                    if (cell.classList.contains('cell-start')) fill = '#00e676';
+                    else if (cell.classList.contains('cell-target')) fill = '#ff007f';
+                    else if (cell.classList.contains('cell-wall')) fill = '#1e2436';
+                    else if (cell.classList.contains('cell-path')) fill = '#ffd600';
+                    else if (cell.classList.contains('cell-curr')) fill = '#ffffff';
+                    else if (cell.classList.contains('cell-visited')) fill = 'rgba(0, 229, 255, 0.45)';
+                }
+                ctx.fillStyle = fill;
+                ctx.fillRect(x + 2, y + 2, cellW - 4, cellH - 4);
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x + 2, y + 2, cellW - 4, cellH - 4);
+
+                if (cell && cell.innerText) {
+                    ctx.fillStyle = (cell.classList.contains('cell-start') || cell.classList.contains('cell-path')) ? '#000' : '#fff';
+                    ctx.font = 'bold 12px "Fira Code", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(cell.innerText, x + cellW / 2, y + cellH / 2 + 4);
+                }
+            }
+        }
+        ctx.textAlign = 'left';
+    } else {
+        const table = tab === 'knapsack' ? ksTable : (tab === 'lcs' ? lcsTable : edTable);
+        if (table) {
+            const rows = table.querySelectorAll('tr');
+            const rowCount = Math.min(rows.length, 12);
+            const cellH = Math.min(35, 420 / rowCount);
+
+            rows.forEach((row, r) => {
+                if (r >= 12) return;
+                const cells = row.querySelectorAll('th, td');
+                const colCount = Math.min(cells.length, 16);
+                const cellW = Math.min(65, 1000 / colCount);
+                const startX = 55 + (1090 - (colCount * cellW)) / 2;
+
+                cells.forEach((cell, c) => {
+                    if (c >= 16) return;
+                    const x = startX + c * cellW;
+                    const y = 190 + r * cellH;
+
+                    let fill = '#0a0d1a';
+                    if (cell.tagName === 'TH' || cell.classList.contains('row-header') || cell.classList.contains('col-header')) fill = '#11172a';
+                    else if (cell.classList.contains('calculating')) fill = 'rgba(0, 229, 255, 0.5)';
+                    else if (cell.classList.contains('comparing')) fill = 'rgba(255, 214, 0, 0.4)';
+                    else if (cell.classList.contains('backtrack')) fill = 'rgba(0, 230, 118, 0.5)';
+                    else if (cell.classList.contains('filled')) fill = '#161e38';
+
+                    ctx.fillStyle = fill;
+                    ctx.fillRect(x + 1, y + 1, cellW - 2, cellH - 2);
+                    ctx.strokeStyle = '#1e293b';
+                    ctx.strokeRect(x + 1, y + 1, cellW - 2, cellH - 2);
+
+                    ctx.fillStyle = cell.classList.contains('calculating') ? '#000' : '#ffffff';
+                    ctx.font = '12px "Fira Code", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(cell.innerText.trim() || '-', x + cellW / 2, y + cellH / 2 + 4);
+                });
+            });
+            ctx.textAlign = 'left';
+        }
+    }
+
+    // Terminal Status Line
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = 'italic 13px "Outfit", sans-serif';
+    const cleanDesc = terminal.innerText.replace(/\s+/g, ' ').substring(0, 130);
+    ctx.fillText(`“${cleanDesc}”`, 55, 685);
+
+    // Footer Watermark
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px "Outfit", sans-serif';
+    ctx.fillText(`Captured: ${new Date().toLocaleString()} | vkDemon1/algoscope`, 55, 715);
+
+    // Download PNG
+    const link = document.createElement('a');
+    link.download = `AlgoScope_${state.activeTab}_step_${state.currentStepIdx + 1}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+
+    showToast('📷 <b>Visual canvas snapshot downloaded as PNG!</b>');
+}
+
+if (btnShareState) btnShareState.addEventListener('click', generateShareableURL);
+if (btnExportSnapshot) btnExportSnapshot.addEventListener('click', exportCanvasSnapshot);
+window.addEventListener('hashchange', loadStateFromURL);
 
 // --- Dynamic SVG Dependency Flow Arrows (DP Visualizers) ---
 let lastArrowData = null;
