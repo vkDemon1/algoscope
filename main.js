@@ -14,6 +14,7 @@ let state = {
 
     // Audio & Code View options
     audioEnabled: true,
+    audioTheme: 'synthwave', // 'synthwave' | 'arcade' | 'marimba'
     codeLang: 'py', // 'py' | 'cpp'
 
     // Cached parameters from initialization
