@@ -357,6 +357,13 @@
                             <button id="player-btn-play" class="btn btn-primary player-btn" title="Play Simulation">▶</button>
                             <button id="player-btn-next" class="btn btn-secondary player-btn" title="Step Forward">⏭</button>
                             <button id="btn-audio-toggle" class="btn btn-secondary player-btn" title="Toggle Sound Synth">🔊</button>
+                            <select id="audio-theme-select" class="audio-theme-select" title="Audio Soundscape Theme">
+                                <option value="synthwave">🎵 Synthwave</option>
+                                <option value="arcade">🕹️ 8-Bit Arcade</option>
+                                <option value="marimba">🔔 Soft Marimba</option>
+                            </select>
+                            <button id="btn-share-state" class="btn btn-secondary player-btn" title="Share Problem (Copy Link)">🔗</button>
+                            <button id="btn-export-snapshot" class="btn btn-secondary player-btn" title="Export Canvas Snapshot (PNG)">📷</button>
                         </div>
                         
                         <div class="slider-group">
@@ -368,8 +375,11 @@
                     <!-- Timeline Scrubber & Metrics Bar -->
                     <div class="timeline-metrics-row">
                         <div class="scrubber-container">
-                            <span class="scrubber-label">Timeline Scrubber:</span>
-                            <input type="range" id="timeline-scrubber" min="0" max="0" value="0" step="1">
+                            <span class="scrubber-label">Timeline Milestones:</span>
+                            <div class="scrubber-track-wrapper">
+                                <input type="range" id="timeline-scrubber" min="0" max="0" value="0" step="1">
+                                <div id="timeline-milestones" class="timeline-milestones"></div>
+                            </div>
                         </div>
                         <div class="operation-metrics-bar">
                             <span class="metric-item">Comparisons: <b id="metric-comparisons">0</b></span>
