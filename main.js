@@ -1303,7 +1303,9 @@ window.onPythonLoaded = function() {
     console.log("JavaScript: PyScript Engine loaded successfully!");
     renderPresetPills();
     updateTheoryHUD(null);
-    initKnapsack();
+    if (!loadStateFromURL()) {
+        initKnapsack();
+    }
     updateCodeViewer();
 };
 
@@ -1658,6 +1660,7 @@ function initKnapsack() {
 
         buildKnapsackGrid(weights, values, capacity);
         renderStep(0);
+        extractAndRenderMilestones();
     } catch (e) {
         showConfigError('knapsack', `Initialization error: ${e.message || e}`);
     }
