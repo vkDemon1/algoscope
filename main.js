@@ -1794,6 +1794,7 @@ function initLCS() {
 
         buildLCSGrid(s1, s2);
         renderStep(0);
+        extractAndRenderMilestones();
     } catch (e) {
         showConfigError('lcs', `Initialization error: ${e.message || e}`);
     }
@@ -1911,6 +1912,7 @@ function initQuickSort() {
         state.currentStepIdx = 0;
 
         renderStep(0);
+        extractAndRenderMilestones();
     } catch (e) {
         showConfigError('quicksort', `Initialization error: ${e.message || e}`);
     }
@@ -2018,6 +2020,7 @@ function initMergeSort() {
         state.currentStepIdx = 0;
 
         renderStep(0);
+        extractAndRenderMilestones();
     } catch (e) {
         showConfigError('mergesort', `Initialization error: ${e.message || e}`);
     }
@@ -2134,6 +2137,7 @@ function initDijkstra() {
         state.currentStepIdx = 0;
 
         renderStep(0);
+        extractAndRenderMilestones();
     } catch (e) {
         showConfigError('dijkstra', `Initialization error: ${e.message || e}`);
     }
@@ -2279,6 +2283,7 @@ function initEditDistance() {
 
         buildEditDistanceGrid(s1, s2);
         renderStep(0);
+        extractAndRenderMilestones();
     } catch (e) {
         showConfigError('editdistance', `Initialization error: ${e.message || e}`);
     }
@@ -2392,6 +2397,14 @@ function renderStep(idx) {
 
     // Update Metrics
     updateMetrics(stepData);
+
+    // Update Active Milestone Pin
+    if (timelineMilestones) {
+        timelineMilestones.querySelectorAll('.milestone-pin').forEach(pin => {
+            const pinStep = parseInt(pin.dataset.step);
+            pin.classList.toggle('active', Math.abs(pinStep - idx) <= 1);
+        });
+    }
 }
 
 function updateMetrics(stepData) {
