@@ -2,14 +2,6 @@
 
 > **Interactive step-by-step visualizer for classic Dynamic Programming, Graph Pathfinding, and Sorting algorithms — powered by Python (in-browser via PyScript) with an optional high-performance WebAssembly backend compiled from C++.**
 
-[![Tests](https://github.com/vkDemon1/algoscope/actions/workflows/test.yml/badge.svg)](https://github.com/vkDemon1/algoscope/actions/workflows/test.yml)
-[![Pages](https://github.com/vkDemon1/algoscope/actions/workflows/deploy.yml/badge.svg)](https://vkDemon1.github.io/algoscope/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
-**[Explore Live Demo →](https://vkDemon1.github.io/algoscope/)**
-
----
-
 ## 🌟 Overview
 
 **AlgoScope** transforms complex algorithmic mechanics into intuitive, high-impact visual demonstrations. Designed for students, educators, and software engineers, AlgoScope breaks down textbook algorithms step-by-step with:
