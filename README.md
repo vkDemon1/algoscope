@@ -129,7 +129,7 @@ Open **[http://localhost:8000](http://localhost:8000)** in your browser. The sid
 
 ## ⚙️ Enabling the WebAssembly Backend
 
-The live GitHub Pages demo includes pre-compiled WASM binaries built via CI. To build the WebAssembly module locally:
+AlgoScope can run with the native WebAssembly engine by compiling the C++ sources using Emscripten:
 
 ### 1. Install Emscripten SDK
 
